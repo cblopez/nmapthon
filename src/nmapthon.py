@@ -542,6 +542,17 @@ class Service:
 
         return self.__scripts[name]
 
+    def __contains__(self, name):
+        """ Returns if script with a given name exists in a service instance.
+
+            :param name: Name of the script
+            :type name: str
+            :return: True if exists, False if not
+            :rtype bool
+        """
+
+        return name in self.__scripts
+
     def __str__(self):
         """ Instance string formatting
 
@@ -800,7 +811,7 @@ class NmapScanner(object):
             :raises: AssertionError
         """
         self._name = name
-        assert isinstance(self.name, str)
+        assert isinstance(self.name, str) or self.name is None
 
     @targets.setter
     def targets(self, targets):
@@ -1211,9 +1222,6 @@ class NmapScanner(object):
         if '-d' in arguments_string:
             raise InvalidArgumentError('Scanner does not support debugging parameter.')
 
-        if '-o' in arguments_string:
-            raise InvalidArgumentError('You cannot output the scan information, user must manually export it.')
-
         # Split arguments with whitespaces
         arguments_list = arguments_string.split()
         # Check if there is an IP address on the arguments, if so, raise InvalidArgumentError
@@ -1576,7 +1584,7 @@ class NmapScanner(object):
                                     'protocol: {} - {}'.format(host, protocol))
 
         if service_instance is None:
-            yield None, None
+            return None, None
 
         else:
             product = service_instance.product if service_instance.product is not None else ''
@@ -1584,7 +1592,7 @@ class NmapScanner(object):
             extrainfo = service_instance.extrainfo if service_instance.extrainfo is not None else ''
             service_detection_info = ' '.join([product, version, extrainfo]).strip()
 
-            yield service_instance.name, service_detection_info
+            return service_instance.name, service_detection_info
 
     def port_scripts(self, host, protocol, port):
         """ Yields all scripts names and output that where executed for a specific port.
@@ -1906,4 +1914,5 @@ class ScanQueue:
         """
         for s in self.__fnished_scanning:
             yield s
+
 
