@@ -1581,8 +1581,8 @@ class NmapScanner(object):
         else:
             product = service_instance.product if service_instance.product is not None else ''
             version = service_instance.version if service_instance.version is not None else ''
-            extrainfo = service_instance.extrainfo if service_instance.version is not None else ''
-            service_detection_info = ' '.join([product, version, extrainfo])
+            extrainfo = service_instance.extrainfo if service_instance.extrainfo is not None else ''
+            service_detection_info = ' '.join([product, version, extrainfo]).strip()
 
             yield service_instance.name, service_detection_info
 
@@ -1906,10 +1906,4 @@ class ScanQueue:
         """
         for s in self.__fnished_scanning:
             yield s
-
-
-
-
-
-
 
