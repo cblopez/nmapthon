@@ -1,5 +1,5 @@
 # Nmapthon
-A complete. high level Nmap module for Python.  
+A complete, high level Nmap module for Python.  
 &nbsp;
   
 ## Documentation  
