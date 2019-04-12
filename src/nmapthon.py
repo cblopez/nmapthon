@@ -1,24 +1,27 @@
 #!/usr/bin/env python
 
-""" Python module to provide nmap scanning for any Python project.
+# Copyright (c) 2019 Christian Barral
 
-This module uses Systems calls to execute the nmap tool, which has to be installed on the system for using this library.
-All the classes provided here have their own functionality and use cases. With nmapthon.py a user will be able to:
-- Perform any nmap scan.
-- Get any peace of the scan information just using a method.
-- Perform multiprocessing scans.
-- Perform asynchronous scans.
-- Customize scans names.
-- Keep track of all scans history.
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
 
-This library also contains every tool needed to parse all the information provided by the user, a large set of
-custom Exceptions to reflect any type of error the scan could have, printing a clear message to the user about why
-the error occurred.
-"""
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
 
 import re
 import socket
-import sys
 import struct
 import subprocess
 import threading
@@ -1804,115 +1807,5 @@ class ScanQueue:
 
     def __init__(self, *args):
         raise NmapScanError('ScanQueue in development.')
-        self.__asyc_scanners = args
-        self.__currently_scanning = []
-        self.__fnished_scanning = []
-        self.__started = False
-
-        self.__assert_attributes()
-
-    def __assert_attributes(self):
-        """ Assert that all scanners in queue are async scanners"""
-        assert all(isinstance(s, AsyncNmapScanner) for s in self.__asyc_scanners)
-
-    def __start_scan_watch(self):
-        """ Background check on running scans. If any scan has finished, it is moved to the finished
-        queue.
-        """
-
-        def __scan_watch(self):
-            while True:
-                for s in range(len(self.__currently_scanning)):
-                    if not self.__currently_scanning[s].is_running():
-                        del self.__async_scanners[s]
-                if not len(self.__currently_scanning):
-                    break
-                time.sleep(1)
-
-            self.__started = False
-
-        watch_thread = threading.Thread(target=__scan_watch, args=[self])
-        watch_thread.start()
-
-    def run_all(self):
-        """ Runs every AsyncNmapScanner in queue and sets the __currently_running attribute to every
-        AsyncNmapScanner instance.
-        """
-        self.__started = True
-        for s in self.__asyc_scanners:
-            self.__currently_scanning.append(s)
-            s.run()
-
-        self.__start_scan_watch()
-
-    def run_specific(self, *args):
-        """ Runs specific scanners in queue, searching by name or position.
-            :param args:
-            WHERE
-                each arg in args is an AsyncNmapScanner name or position in queue, str or int
-        """
-
-        for arg in args:
-            # If an argument is a string
-            if isinstance(arg, str):
-                # Variable storing if at least one scan executed
-                one_executed = False
-                # Loop through scanners
-                for sc in self.__asyc_scanners:
-                    # If scanner has that name and it is not being executed
-                    if sc.name == arg and sc not in self.__currently_scanning:
-                        # Run and add to currently executing
-                        self.__currently_scanning.append(sc)
-                        sc.run()
-                        # Store that at least one executed
-                        one_executed = True
-                        # Set started to True
-                        self.__started = False
-                # If no scans executed
-                if not one_executed:
-                    # Raise exception
-                    raise ScanQueueError('There is not scanner with such name in the queue: {}'.format(arg))
-
-            # If an argument is an integer
-            elif isinstance(arg, int):
-                try:
-                    # Directly execute that scanner and add to currently executing
-                    self.__asyc_scanners[arg].run()
-                    self.__currently_scanning.append(self.__asyc_scanners[arg])
-                    # Set started to True
-                    self.__started = True
-                except IndexError:
-                    # If KeyError, scan does not exist. Raise exception
-                    raise ScanQueueError('Scanner with position {} does not exist in queue'.format(arg))
-
-            # If wrong type argument. Raise exception
-            else:
-                raise ScanQueueError('run_specific() method parameters must be AsyncNmapScanner '
-                                     'instance\'s name or position (int or str)')
-
-            # Start watcher
-            if self.__started:
-                self.__start_scan_watch()
-
-    def queued_finished(self):
-        """ Checks if all queued scans that where executed have finished.
-
-            :return: True if they all have finished. False if not.
-            :rtype: bool
-            :raises: ScanQueueError
-        """
-        # If no scans active, return True.
-        if not len(self.__currently_scanning):
-            return True
-
-        return False
-
-    def finished_scans(self):
-        """ Yields all finished scans
-
-            :return: Iterable of AsyncNmapScanners that have finished.
-        """
-        for s in self.__fnished_scanning:
-            yield s
-
+        
 
