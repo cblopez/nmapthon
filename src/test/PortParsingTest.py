@@ -1,3 +1,10 @@
+import sys
+import os
+
+PACKAGE_PARENT = '..'
+SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__))))
+sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
+
 import unittest
 import nmapthon
 
@@ -5,7 +12,7 @@ import nmapthon
 class PortParsingTest(unittest.TestCase):
 
     def setUp(self):
-        self.scanner = nmapthon.NmapScanner()
+        self.scanner = nmapthon.NmapScanner('127.0.0.1')
         self.single_port = '80'
         self.comma_split_ports = '10,20,30'
         self.dash_split_ports = '10-15'

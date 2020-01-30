@@ -695,9 +695,9 @@ class NmapScanner(object):
         arguments: List of arguments or string containing them.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, targets, **kwargs):
         self.name = kwargs.get('name')
-        self.targets = kwargs.get('targets')
+        self.targets = targets
         self.ports = kwargs.get('ports')
         self.scan_arguments = kwargs.get('arguments')
         self._start_timestamp = None
@@ -1306,45 +1306,45 @@ class NmapScanner(object):
         self._scanned_protocols_info = nmap_output['scan_info']
         self._result = nmap_output['scan']
 
-    def __has_finished(self):
+    def has_finished(func):
         """ Raises NmapScannerError if scanner has not finished or was not performed.
 
             :raises: NmapScanError
         """
+        def check_finish_tag(self, *args, **kwargs):
+            if not self.finished:
+                raise NmapScanError('Scan was not completed or was not even launched.')
+            return func(self, *args, **kwargs)
+        return check_finish_tag
 
-        if not self.finished:
-            raise NmapScanError('Scan was not completed or was not even launched.')
-
+    @has_finished
     def raw_data(self):
         """ Returns the parsed dictionary itself containing all the scan information.
 
             :return: Structured nested dictionary
             :rtype: dict
         """
-
-        self.__has_finished()
         return self._result
 
+    @has_finished
     def scanned_hosts(self):
         """ Returns a list containing all scanned hosts.
 
             :return: List of scanned hosts
             :rtype: list
         """
-
-        self.__has_finished()
         return [ip for ip in self._result]
 
+    @has_finished
     def non_scanned_hosts(self):
         """ Return a list of hosts that did not respond to the scan.
 
             :return: List of non scanned hosts
             :rtype: list
         """
-
-        self.__has_finished()
         return [t for t in self._target_list if t not in self._result]
 
+    @has_finished
     def state(self, host):
         """ Return the state of a host. It returns None if the host was not scanned.
 
@@ -1354,13 +1354,12 @@ class NmapScanner(object):
             :rtype: str, None
             :raises: NmapScannerError if host does not exist.
         """
-
-        self.__has_finished()
         try:
             return self._result[host]['state']
         except KeyError:
             raise NmapScanError('Host does not exist in the scan result.')
 
+    @has_finished
     def reason(self, host):
         """ Returns the reason why a host was successfully scanned. It returns None if the host was not scanned
 
@@ -1370,13 +1369,12 @@ class NmapScanner(object):
             :rtype: str, None
             :raises: NmapScannerError if host does not exist.
         """
-
-        self.__has_finished()
         try:
             return self._result[host]['reason']
         except KeyError:
             raise NmapScanError('Host does not exist in the scan result.')
 
+    @has_finished
     def all_protocols(self, host):
         """ Yields all scanned protocols from a host.
 
@@ -1386,14 +1384,13 @@ class NmapScanner(object):
             :rtype: str
             :raises: NmapScannerError if host does not exist.
         """
-
-        self.__has_finished()
         try:
             for proto in self._result[host]['protocols']:
                 yield proto
         except KeyError:
             raise NmapScanError('Host does not exist in the scan result.')
 
+    @has_finished
     def scanned_ports(self, host, protocol):
         """ Return a list of scanned ports for a given host and protocol.
 
@@ -1405,12 +1402,12 @@ class NmapScanner(object):
             :rtype: list
             :raises: NmapScannerError if host or protocol do not exist.
         """
-        self.__has_finished()
         try:
             return [int(p) for p in self._result[host]['protocols'][protocol]]
         except KeyError:
             raise NmapScanError('Host and/or protocol do not exist.')
 
+    @has_finished
     def non_scanned_ports(self, host, protocol):
         """ Return a list of non scanned ports for a given host and protocol.
 
@@ -1422,13 +1419,13 @@ class NmapScanner(object):
                 :rtype: list
                 :raises: NmapScannerError if host or protocol do not exist.
         """
-        self.__has_finished()
         try:
             return [p for p in self._port_list if str(p)
                     not in self._result[host]['protocols'][protocol]]
         except KeyError:
             raise NmapScanError('Host and/or protocol do not exist.')
 
+    @has_finished
     def hostnames(self, host):
         """ Returns a list containing all hostnames from a given host, eliminating duplicates.
 
@@ -1438,13 +1435,12 @@ class NmapScanner(object):
             :rtype: list
             :raises: NmapScanError if host does not exist.
         """
-
-        self.__has_finished()
         try:
             return list(set(self._result[host]['hostnames']))
         except KeyError:
             raise NmapScanError('Host does not exist in the scan result.')
 
+    @has_finished
     def os_matches(self, host):
         """ Yield every OS name and accuracy for every OS match from a given host.
 
@@ -1454,14 +1450,13 @@ class NmapScanner(object):
             :rtype: iter
             :raises: NmapScanError if host does not exist.
         """
-
-        self.__has_finished()
         try:
             for os_dict in self._result[host]['os']['matches']:
                 yield os_dict['name'], os_dict['accuracy']
         except KeyError:
             raise NmapScanError('Host does not exist in the scan result.')
 
+    @has_finished
     def os_fingerprint(self, host):
         """ Returns the OS fingerprint from a given host. If there is no fingerprint match or the host was not scanned,
         it will return None.
@@ -1472,13 +1467,12 @@ class NmapScanner(object):
             :rtype: str, None
             :raises: NmapScanError if the host does not exist.
         """
-
-        self.__has_finished()
         try:
             return self._result[host]['os']['fingerprint']
         except KeyError:
             raise NmapScanError('Host does not exist in the scan result.')
 
+    @has_finished
     def most_accurate_os(self, host):
         """ Returns a list of the most accurate OS matches for a given host. If there is no OS match or no OS match was
         performed, it will return None.
@@ -1489,8 +1483,6 @@ class NmapScanner(object):
             :rtype: list
             :raises: NmapScanError if the host does not exist.
         """
-
-        self.__has_finished()
         try:
             best_accuracy = self._result[host]['os']['matches'][0]['accuracy']
         except KeyError:
@@ -1499,6 +1491,7 @@ class NmapScanner(object):
         return [o['name'] for o in self._result[host]['os']['matches']
                 if o['accuracy'] == best_accuracy]
 
+    @has_finished
     def port_state(self, host, protocol, port):
         """ Yields the state and reason from a port, given a host and a protocol.
 
@@ -1515,8 +1508,6 @@ class NmapScanner(object):
                 reason str is the reason for that port to be classified as open.
             :raises: NmapScanError if host, protocol or port do not exist.
         """
-
-        self.__has_finished()
         try:
             port = self._result[host]['protocols'][protocol][str(port)]
             return port['state'], port['reason']
@@ -1529,6 +1520,7 @@ class NmapScanner(object):
                 raise NmapScanError('Port doest no exist in scan result for given host and'
                                     'protocol: {} - {}'.format(host, protocol))
 
+    @has_finished
     def service(self, host, protocol, port):
         """ Returns a Service instance containing the information from a service for
         a given host, protocol and port. None if no service information was found
@@ -1555,6 +1547,7 @@ class NmapScanner(object):
                 raise NmapScanError('Port doest no exist in scan result for given host and'
                                     'protocol: {} - {}'.format(host, protocol))
 
+    @has_finished
     def standard_service_info(self, host, protocol, port):
         """ Returns the service name and service detection info for a specific port. The name is just the
         service name, but the service detection info is a string containing the service product, version and extrainfo
@@ -1573,8 +1566,6 @@ class NmapScanner(object):
                 service_info is the service information standard output. None if it does not exist.
             :raises: NmapScanError if the host, protocol or port do no exist.
         """
-
-        self.__has_finished()
         try:
             service_instance = self._result[host]['protocols'][protocol][str(port)]['service']
         except KeyError as e:
@@ -1597,6 +1588,7 @@ class NmapScanner(object):
 
             return service_instance.name, service_detection_info
 
+    @has_finished
     def port_scripts(self, host, protocol, port):
         """ Yields all scripts names and output that where executed for a specific port.
 
@@ -1611,8 +1603,6 @@ class NmapScanner(object):
                 name str is the script name
                 output str is the script execution output.
         """
-
-        self.__has_finished()
         try:
             service_instance = self._result[host]['protocols'][protocol][str(port)]['service']
         except KeyError as e:
@@ -1628,6 +1618,7 @@ class NmapScanner(object):
             for name, output in service_instance.scripts.items():
                 yield name, output
 
+    @has_finished
     def host_scripts(self, host):
         """ Yields every name and output for each script launched to the host.
 
@@ -1638,10 +1629,10 @@ class NmapScanner(object):
                 name str is the script name
                 output str, None is the script execution result
         """
-
         for script in self._result[host]['scripts']:
             yield script['name'], script['output']
 
+    @has_finished
     def trace_info(self, host):
         """ Yields every TraceHop instances representing the hops form a traceroute execution.
 
@@ -1806,6 +1797,5 @@ class ScanQueue:
     """
 
     def __init__(self, *args):
-        raise NmapScanError('ScanQueue in development.')
+        raise NotImplementedError
         
-
