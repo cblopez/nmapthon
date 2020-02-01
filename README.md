@@ -14,7 +14,8 @@ A complete, high level Nmap module for Python.
   - ### [**AsyncNmapScanner**](https://github.com/cblopez/nmapthon/blob/master/README.md#asyncnmapscanner-1)  
     - #### [**Run the scanner**](https://github.com/cblopez/nmapthon/blob/master/README.md#run-the-scan)  
     - #### [**Properties and methods**](https://github.com/cblopez/nmapthon/blob/master/README.md#properties-and-methods-1)  
-- ## [**List of properties and methods**](https://github.com/cblopez/nmapthon/blob/master/README.md#list-of-properties-setters-and-methods)
+- ## [**List of properties and methods**](https://github.com/cblopez/nmapthon/blob/master/README.md#list-of-properties-setters-and-methods)  
+  
 ---
 # Welcome to the Nmapthon Wiki! A high level Nmap module for Python.  
 ---
