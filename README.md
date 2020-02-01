@@ -2,19 +2,19 @@
 A complete, high level Nmap module for Python.  
 &nbsp;
   
-- ## [**Home**](https://github.com/cblopez/nmapthon/wiki/Home)
-- ## [**Classes**](https://github.com/cblopez/nmapthon/wiki/Classes)  
-  - ### [**NmapScanner**](https://github.com/cblopez/nmapthon/wiki/NmapScanner)
-    - #### [**Run the scanner**](https://github.com/cblopez/nmapthon/wiki/NmapScanner:-Run)
-    - #### [**Simple scan information**](https://github.com/cblopez/nmapthon/wiki/NmapScanner:-Simple-scan-information)
-    - #### [**Hosts, protocols and ports**](https://github.com/cblopez/nmapthon/wiki/NmapScanner:-Hosts,-protocols-and-ports)
-    - #### [**Services**](http://github.com/cblopez/nmapthon/wiki/NmapScanner:-Services)
-    - #### [**OS Detection**](http://github.com/cblopez/nmapthon/wiki/NmapScanner:-OS-Detection)  
-    - #### [**Host scripts and Traceroute**](https://github.com/cblopez/nmapthon/wiki/NmapScanner:-Host-Scripts-and-Traceroute)  
-  - ### [**AsyncNmapScanner**](https://github.com/cblopez/nmapthon/wiki/AsyncNmapScanner)  
-    - #### [**Run the scanner**](https://github.com/cblopez/nmapthon/wiki/AsyncNmapScanner:-Run-the-scan)  
-    - #### [**Properties and methods**](https://github.com/cblopez/nmapthon/wiki/AsyncNmapScanner:-Properties-and-Methods)  
-- ## [**List of properties and methods**](https://github.com/cblopez/nmapthon/wiki/List-of-properties-and-methods)
+- ## [**Home**](https://github.com/cblopez/nmapthon/blob/master/README.md#welcome-to-the-nmapthon-wiki-a-high-level-nmap-module-for-python)
+- ## [**Classes**](https://github.com/cblopez/nmapthon/blob/master/README.md#classes-1)  
+  - ### [**NmapScanner**](https://github.com/cblopez/nmapthon/blob/master/README.md#nmapscanner-1)
+    - #### [**Run the scanner**](https://github.com/cblopez/nmapthon/blob/master/README.md#running-the-scan)
+    - #### [**Simple scan information**](https://github.com/cblopez/nmapthon/blob/master/README.md#getting-simple-scan-information)
+    - #### [**Hosts, protocols and ports**](https://github.com/cblopez/nmapthon/blob/master/README.md#get-hosts-information)
+    - #### [**Services**](https://github.com/cblopez/nmapthon/blob/master/README.md#service-information)
+    - #### [**OS Detection**](https://github.com/cblopez/nmapthon/blob/master/README.md#os-detection-1)  
+    - #### [**Host scripts and Traceroute**](https://github.com/cblopez/nmapthon/blob/master/README.md#host-scripts)  
+  - ### [**AsyncNmapScanner**](https://github.com/cblopez/nmapthon/blob/master/README.md#asyncnmapscanner-1)  
+    - #### [**Run the scanner**](https://github.com/cblopez/nmapthon/blob/master/README.md#run-the-scan)  
+    - #### [**Properties and methods**](https://github.com/cblopez/nmapthon/blob/master/README.md#properties-and-methods-1)  
+- ## [**List of properties and methods**](https://github.com/cblopez/nmapthon/blob/master/README.md#list-of-properties-setters-and-methods)
 ---
 # Welcome to the Nmapthon Wiki! A high level Nmap module for Python.  
 ---
@@ -28,7 +28,7 @@ Downloading the file from the 'src' folder and pasting it directly into your pro
 
 There are **two available classes** to use right now with this module:  
 - **NmapScanner**: Used to execute custom nmap scans, providing a large list of methods and customization to gather all the resulting information. Docs [here](https://github.com/cblopez/nmapthon/wiki/NmapScanner)  
-- AsyncNmapScanner: Inherits NmapScanner and as you could guess by the name, it runs nmap scans asynchronously allowing the program to execute other actions meanwhile.  
+- **AsyncNmapScanner**: Inherits NmapScanner and as you could guess by the name, it runs nmap scans asynchronously allowing the program to execute other actions meanwhile.  
   
 ---
 # NmapScanner  
@@ -275,7 +275,7 @@ for most_acc_os in scanner.most_accurate_os('127.0.0.1'):
   
   
 ## Host Scripts  
-We can gather the information from the scripts that are host oriented. If looking for service oriented scripts, you can find  how to get them [here](https://github.com/cblopez/nmapthon/wiki/NmapScanner:-Services):  
+We can gather the information from the scripts that are host oriented. If looking for service oriented scripts, you can find  how to get them [here](https://github.com/cblopez/nmapthon/blob/master/README.md#service-information):  
 - `host_scripts(host:str)`: **Yield** every name and output for every script launched against the host.  
   
 ## Traceroute information  
@@ -323,7 +323,7 @@ if '85.65.234.12' in scanner.scanned_hosts():
 Class for executing background nmap scans.  
   
 ## Instantiation  
-Instantiating `AsyncNmapScanner` has the same `kwargs` as the `NmapScanner` class, you can find them [here](https://github.com/cblopez/nmapthon/wiki/NmapScanner). But this one has an optional extra `kwargs` parameter:  
+Instantiating `AsyncNmapScanner` has the same `kwargs` as the `NmapScanner` class, you can find them [here](https://github.com/cblopez/nmapthon/blob/master/README.md#nmapscanner-1). But this one has an optional extra `kwargs` parameter:  
 - `mute_errors`: A boolean type parameter, `False` by default. If set to `True`, the AsyncNmapScanner wont show fatal errors when executing. **It is not recommended to set it to** `True` **because it hides scan errors, but in case you need it, you can use it.**  
   
 ## Example  
@@ -383,7 +383,7 @@ if not scanner.finished_succesfully():
 ```  
   
 ## Properties and Methods  
-Apart from the additional methods mentioned in the [previous section](https://github.com/cblopez/nmapthon/wiki/AsyncNmapScanner:-Run-the-scan), all the properties and methods from the `NmapScanner` class are inherited, please [read the documentation](https://github.com/cblopez/nmapthon/wiki/NmapScanner) from this class to know what to use.  
+Apart from the additional methods mentioned in the [previous section](https://github.com/cblopez/nmapthon/blob/master/README.md#run-the-scan), all the properties and methods from the `NmapScanner` class are inherited, please [read the documentation](https://github.com/cblopez/nmapthon/blob/master/README.md#nmapscanner-1) from this class to know what to use.  
   
 ---
 # List of properties, setters and methods  
