@@ -434,7 +434,7 @@ __*Need to execute the__ `run()` __method before using this property, otherwise 
 | Method | Return type | Description |  
 | ------ | ----------- | ----------- |  
 | `run()` | - | Start scanning. |  
-| `raw_data()`* | `dict` | Return a complex dictionary containing all the output information (**not recommended**). |  
+| `raw_data()`* | `dict` | Return a complex dictionary containing all the output information. |  
 | `scanned_hosts()`* | `list` | Return a list of all hosts that responded to the scan. |  
 | `non_scanned_hosts()`* | `list` | Return a list of all hosts that did not respond to the scan. |  
 | `state(host:str)`* | `str` | Return the state of a given host. |  
