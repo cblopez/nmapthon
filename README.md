@@ -393,8 +393,8 @@ Apart from the additional methods mentioned in the [previous section](https://gi
 ## NmapScanner  
 Here is a complete list of attributes and methods from the ´NmapScanner´ class.  
   
-  
 ### NmapScanner: Properties  
+  
 | Property  | Return type | Description |  
 | --------- | ----------- | ----------- |  
 | `name` | `str`, `None` | Name of the scanner, `None` if no name was set on instantiation. |    
@@ -415,8 +415,8 @@ Here is a complete list of attributes and methods from the ´NmapScanner´ class
   
 __*Need to execute the__ `run()` __method before using this property, otherwise it will return__ `None` __.__ 
   
-  
 ### NmapScanner: Setters  
+  
 | Setter  | Value type | Description |  
 | ------- | ---------- | ----------- |  
 | `name` | `str` | Set the name of the scanner | 
@@ -424,8 +424,8 @@ __*Need to execute the__ `run()` __method before using this property, otherwise 
 | `targets` | `str`, `list` | Set the targets` IPs to scan |  
 | `arguments` | `str` | Set the arguments to use by the scan. No `-p`, `-v` or `-d` allowed |  
   
-  
 ### NmapScanner: Methods  
+  
 | Method | Return type | Description |  
 | ------ | ----------- | ----------- |  
 | `run()` | - | Start scanning. |  
@@ -446,7 +446,6 @@ __*Need to execute the__ `run()` __method before using this property, otherwise 
 | `port_scripts(host:str, protocol:str, port:str,int)`* | `generator` | **Yield** every `(script_name, script_output)` for every script launched against a port, for a given host and protocol. |  
 | `host_scripts(host:str)`* | `generator` | **Yield** every `(script_name, script_output)` for every script launched against a given host. |  
 | `trace_info(host:str)`* | `generator` | **Yield** one `TraceHop` instance, representing a Traceroute hop, for every hop gathered. |  
-  
   
 __*Need to execute the__ `run()` __method before using this method, otherwise it will raise `NmapScanError`__.__  
   
