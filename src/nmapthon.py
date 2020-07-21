@@ -1262,14 +1262,13 @@ class NmapScanner:
         if len(output):
             try:
                 parsed_nmap_output = _XMLParser(output).parse()
-
             # If parsing error raise NmapScanError with STDERR info.
-            except ET.ParseError:
-                raise NmapScanError('Could not parse output from nmap. STDERR says:\r\n' + error)
+            except (ET.ParseError, AttributeError) as e:
+                raise NmapScanError('Could not parse output from nmap. STDERR says:\n{}'.format(e))
 
         # If there is no output, raise NmapScanError with STDERR info
         else:
-            raise NmapScanError('No output from process was given. STDERR says:\r\n' + error)
+            raise NmapScanError('No output from process was given. STDERR says:\n{}'.format(error.decode('utf8')))
 
         # If any error but method reaches this point, there are tolerant errors.
         if len(error):
@@ -1302,10 +1301,12 @@ class NmapScanner:
 
             :raises: NmapScanError
         """
+
         def check_finish_tag(self, *args, **kwargs):
             if not self.finished:
                 raise NmapScanError('Scan was not completed or was not even launched.')
             return func(self, *args, **kwargs)
+
         return check_finish_tag
 
     @has_finished
@@ -1609,7 +1610,7 @@ class NmapScanner:
                                     'protocol: {} - {}'.format(host, protocol))
 
         scripts_list = service_instance.scripts.items() if script_name is None else \
-            [x, y in service_instance.scripts.items if script_name in x]
+            [(x, y) for x, y in service_instance.scripts.items if script_name in x]
 
         if service_instance is not None:
             for name, output in scripts_list:
@@ -1704,21 +1705,23 @@ class NmapScanner:
                     # protocol, add the ports that have not been scanned within the instance nmap scan.
                     # Do the same for UDP.
                     # Note: This includes services and port scripts
-                    if merge_tcp and 'tcp' not in self._result[host]['protocols'] and\
-                            'tcp' in current_raw_data[host]['protocols']['tcp']:
+                    if merge_tcp and 'tcp' not in self._result[host]['protocols'] and \
+                            'tcp' in current_raw_data[host]['protocols']:
                         self._result[host]['protocols']['tcp'] = current_raw_data[host]['protocols']['tcp']
-                    elif merge_tcp:
+                    elif merge_tcp and 'tcp' in self._result[host]['protocols'] and \
+                            'tcp' in current_raw_data[host]['protocols']:
                         for port in current_raw_data[host]['protocols']['tcp']:
-                            if port in self._result[host]['protocols']['tcp']:
+                            if port not in self._result[host]['protocols']['tcp']:
                                 self._result[host]['protocols']['tcp'][port] = \
                                     current_raw_data[host]['protocols']['tcp'][port]
 
-                    if merge_udp and 'udp' not in self._result[host]['protocols'] and\
-                            'udp' in current_raw_data[host]['protocols']['udp']:
+                    if merge_udp and 'udp' not in self._result[host]['protocols'] and \
+                            'udp' in current_raw_data[host]['protocols']:
                         self._result[host]['protocols']['udp'] = current_raw_data[host]['protocols']['udp']
-                    elif merge_udp:
+                    elif merge_udp and 'udp' in self._result[host]['protocols'] and \
+                            'udp' in current_raw_data[host]['protocols']:
                         for port in current_raw_data[host]['protocols']['udp']:
-                            if port in self._result[host]['protocols']['udp']:
+                            if port not in self._result[host]['protocols']['udp']:
                                 self._result[host]['protocols']['udp'][port] = \
                                     current_raw_data[host]['protocols']['udp'][port]
 

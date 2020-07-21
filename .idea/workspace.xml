@@ -22,33 +22,42 @@
       </usages-collector>
       <usages-collector id="statistics.file.extensions.open">
         <counts>
-          <entry key="py" value="1" />
+          <entry key="py" value="2" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.open">
         <counts>
-          <entry key="Python" value="1" />
+          <entry key="Python" value="2" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
-          <entry key="py" value="3888" />
+          <entry key="py" value="4269" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
-          <entry key="Python" value="3888" />
+          <entry key="Python" value="4269" />
         </counts>
       </usages-collector>
     </session>
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/nmapthon.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="124">
-              <caret line="1753" lean-forward="true" selection-start-line="1753" selection-end-line="1753" />
+            <state relative-caret-position="488">
+              <caret line="1729" column="37" lean-forward="true" selection-start-line="1729" selection-start-column="37" selection-end-line="1729" selection-end-column="37" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/src/example.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="225">
+              <caret line="15" lean-forward="true" selection-start-line="15" selection-end-line="15" />
             </state>
           </provider>
         </entry>
@@ -58,6 +67,10 @@
   <component name="FindInProjectRecents">
     <findStrings>
       <find>def port</find>
+      <find>scan_arguments</find>
+      <find>NmapScanError</find>
+      <find>class NmapScan</find>
+      <find>def merge</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -67,6 +80,7 @@
     <option name="CHANGED_PATHS">
       <list>
         <option value="$PROJECT_DIR$/src/nmapthon.py" />
+        <option value="$PROJECT_DIR$/src/example.py" />
       </list>
     </option>
   </component>
@@ -173,8 +187,15 @@
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/src/nmapthon.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="124">
-          <caret line="1753" lean-forward="true" selection-start-line="1753" selection-end-line="1753" />
+        <state relative-caret-position="488">
+          <caret line="1729" column="37" lean-forward="true" selection-start-line="1729" selection-start-column="37" selection-end-line="1729" selection-end-column="37" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/example.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="225">
+          <caret line="15" lean-forward="true" selection-start-line="15" selection-end-line="15" />
         </state>
       </provider>
     </entry>
