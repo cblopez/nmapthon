@@ -25,7 +25,6 @@ import socket
 import struct
 import subprocess
 import threading
-import time
 import xml.etree.ElementTree as ET
 
 
