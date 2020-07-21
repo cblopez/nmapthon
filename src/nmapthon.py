@@ -74,14 +74,6 @@ class NmapScanError(Exception):
         Exception.__init__(self, message)
 
 
-class ScanQueueError(Exception):
-    """ Exception class for the ScanQueue class errors.
-    """
-
-    def __init__(self, message):
-        Exception.__init__(self, message)
-
-
 #######################################
 # Module Classes
 #######################################
@@ -237,7 +229,7 @@ class _XMLParser:
             try:
                 current_ip = host.find('address').attrib['addr']
             except (KeyError, IndexError):
-                raise XMLParsingError('Could not parse host\'s ip address.')
+                raise XMLParsingError('Could not parse host\'s IP address.')
 
             # Use the IP address as a key, assigning an initially empty dictionary to save all host-related info.
             self.parsed_info['scan'] = {current_ip: {}}
@@ -271,7 +263,7 @@ class _XMLParser:
 
                 # Build X-Path predicate, which means 'Find every <port> element inside a <ports> element and has
                 # a 'protocol' attribute equal to the current protocol from this loop iteration.
-                port_predicate = ".//ports/port[@protocol=\'" + protocol + "\']"
+                port_predicate = f".//ports/port[@protocol='{protocol}']"
                 # Build X-Path predicate for states, based on the port_predicate, now just find the state element inside
                 # the previously gathered <port> element.
                 state_predicate = port_predicate + '/state'
@@ -568,7 +560,6 @@ class Service:
                 not len({name: output for name, output in self.all_scripts()}):
             return 'None existing service'
 
-        base_string = ''
         base_string = "Name: "
         if self.name is not None:
             base_string += self.name + '\r\n'
@@ -677,7 +668,7 @@ class TraceHop:
         return base_string
 
 
-class NmapScanner(object):
+class NmapScanner:
     """ Nmap Scanners super-class, containing all the common logic for every single Scanner that can be created.
 
     Class attributes represent single pieces of information gathered from the result of the nmap being executed.
@@ -1588,16 +1579,19 @@ class NmapScanner(object):
 
             return service_instance.name, service_detection_info
 
+    # TODO: Add to docs
     @has_finished
-    def port_scripts(self, host, protocol, port):
+    def port_scripts(self, host, protocol, port, script_name=None):
         """ Yields all scripts names and output that where executed for a specific port.
 
             :param host: Host where to get the port info from
             :param protocol: Protocol specification of the port
             :param port: Target port
+            :param script_name: Optional NSE script name
             :type host: str
             :type protocol: str
             :type port: int, str
+            :type script_name: str
             :returns: iter
                 WHERE
                 name str is the script name
@@ -1614,22 +1608,29 @@ class NmapScanner(object):
                 raise NmapScanError('Port doest no exist in scan result for given host and'
                                     'protocol: {} - {}'.format(host, protocol))
 
+        scripts_list = service_instance.scripts.items() if script_name is None else \
+            [x, y in service_instance.scripts.items if script_name in x]
+
         if service_instance is not None:
-            for name, output in service_instance.scripts.items():
+            for name, output in scripts_list:
                 yield name, output
 
     @has_finished
-    def host_scripts(self, host):
+    def host_scripts(self, host, script_name=None):
         """ Yields every name and output for each script launched to the host.
 
             :param host: Host where to get the scripts info from
+            :param script_name: Optional NSE script name
             :type host: str
+            :type script_name: str
             :returns: tuple
                 WHERE
                 name str is the script name
                 output str, None is the script execution result
         """
-        for script in self._result[host]['scripts']:
+        host_scripts = self._result[host]['scripts'] if script_name is None else \
+            [x for x in self._result[host]['scripts'] if script_name in x['name']]
+        for script in host_scripts:
             yield script['name'], script['output']
 
     @has_finished
@@ -1644,6 +1645,112 @@ class NmapScanner(object):
 
         for trace_instance in self._result[host]['trace']:
             yield trace_instance
+
+    @has_finished
+    def merge(self, *args, **kwargs):
+        """ Merge the current NmapScan instance with the other provided instances
+
+            :param args: Any number of NmapScanner instances
+            :type args: NmapScanner
+        """
+
+        merge_tcp = kwargs.get('merge_tcp', True)
+        merge_udp = kwargs.get('merge_udp', True)
+        merge_scripts = kwargs.get('merge_scripts', True)
+        merge_trace = kwargs.get('merge_trace', True)
+        merge_os = kwargs.get('merge_os', True)
+        merge_non_scanned = kwargs.get('merge_non_scanned', False)
+
+        # Raise exception if no args
+        if not len(args):
+            raise NmapScanError('merge() method requires at least one element')
+
+        # All args must be NmapScanner instances
+        if not all([isinstance(x, NmapScanner) for x in args]):
+            raise NmapScanError('Cannot merge non NmapScanner objects')
+
+        # Loop through each scanner
+        for current_scanner in args:
+            # Check each single host from the scanner
+            for host in current_scanner.scanned_hosts():
+                # Check if host is stored on the current instance.
+                # If the host does not exist on the current instance, copy the dictionary section
+                # depending on the merge_tcp and merge_udp values
+                if host not in self._result:
+                    self._result[host] = {'protocols': []}
+                    self._target_list.append(host)
+                    current_raw_data = current_scanner.raw_data()
+                    if merge_tcp and 'tcp' in current_raw_data[host]['protocols']:
+                        self._result[host]['protocols']['tcp'] = current_raw_data[host]['protocols']['tcp']
+                    if merge_udp and 'udp' in current_raw_data[host]['protocols']:
+                        self._result[host]['protocols']['udp'] = current_raw_data[host]['protocols']['udp']
+                    if merge_trace:
+                        self._result[host]['trace'] = current_raw_data[host]['trace']
+                    if merge_os:
+                        self._result[host]['os'] = current_raw_data[host]['os']
+                    if merge_scripts:
+                        self._result[host]['scripts'] = current_raw_data[host]['scripts']
+                    if merge_non_scanned:
+                        # Append non scanned by just appending those targets from the target list that are not
+                        # already in the current list
+                        for i in current_scanner._target_list:
+                            if i not in self._target_list:
+                                self._target_list.append(i)
+                # If host already in scanner
+                else:
+                    current_raw_data = current_scanner.raw_data()
+                    # If the current instance does not have TCP for the current target, add the information
+                    # from the current scan. If the instance on the other hand has information for that particular
+                    # protocol, add the ports that have not been scanned within the instance nmap scan.
+                    # Do the same for UDP.
+                    # Note: This includes services and port scripts
+                    if merge_tcp and 'tcp' not in self._result[host]['protocols'] and\
+                            'tcp' in current_raw_data[host]['protocols']['tcp']:
+                        self._result[host]['protocols']['tcp'] = current_raw_data[host]['protocols']['tcp']
+                    elif merge_tcp:
+                        for port in current_raw_data[host]['protocols']['tcp']:
+                            if port in self._result[host]['protocols']['tcp']:
+                                self._result[host]['protocols']['tcp'][port] = \
+                                    current_raw_data[host]['protocols']['tcp'][port]
+
+                    if merge_udp and 'udp' not in self._result[host]['protocols'] and\
+                            'udp' in current_raw_data[host]['protocols']['udp']:
+                        self._result[host]['protocols']['udp'] = current_raw_data[host]['protocols']['udp']
+                    elif merge_udp:
+                        for port in current_raw_data[host]['protocols']['udp']:
+                            if port in self._result[host]['protocols']['udp']:
+                                self._result[host]['protocols']['udp'][port] = \
+                                    current_raw_data[host]['protocols']['udp'][port]
+
+                    # Keep checking the rest of the host attributes
+                    # Only add Traceroute information if there is not info (Merging that information may
+                    # be problematic)
+                    if merge_trace:
+                        if not len(self._result[host]['trace']):
+                            self._result[host]['trace'] = current_raw_data[host]['trace']
+                    if merge_os:
+                        if not len(self._result[host]['os']['matches']):
+                            try:
+                                self._result[host]['os']['matches'] = current_raw_data[host]['os']['matches']
+                            except KeyError:
+                                pass
+                        else:
+                            try:
+                                for i in current_raw_data[host]['os']['matches']:
+                                    if i not in self._result[host]['os']['matches']:
+                                        self._result[host]['os']['matches'].append(i)
+                            except KeyError:
+                                pass
+                    if merge_scripts:
+                        for i in current_raw_data[host]['scripts']:
+                            if i not in self._result[host]['scripts']:
+                                self._result[host]['scripts'].append(i)
+                    if merge_non_scanned:
+                        # Append non scanned by just appending those targets from the target list that are not
+                        # already in the current list
+                        for i in current_scanner._target_list:
+                            if i not in self._target_list:
+                                self._target_list.append(i)
 
 
 class AsyncNmapScanner(NmapScanner):
@@ -1782,20 +1889,3 @@ class AsyncNmapScanner(NmapScanner):
         """
         self.__execution_thread = threading.Thread(target=self.__background_run, args=[])
         self.__execution_thread.start()
-
-
-class ScanQueue:
-    """ Class containing any number of AsyncNmapScanner instances that provides controlled execution over them.
-
-        Allows to execute all queued scans or particular scans by number and/or name. It also allows to
-        add, modify or delete existing scans in the queue. The __init__ function stores any number of
-        AsyncNmapScanner instances.
-
-            :param args:
-            WHERE
-                each arg in args is an AsyncNmapScanner instance.
-    """
-
-    def __init__(self, *args):
-        raise NotImplementedError
-        
