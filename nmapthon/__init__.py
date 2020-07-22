@@ -1663,7 +1663,7 @@ class NmapScanner:
 
         # Raise exception if no args
         if not len(args):
-            raise NmapScanError('merge() method requires at least one element')
+            raise NmapScanError('NmapScanner.merge() method requires at least one argument')
 
         # All args must be NmapScanner instances
         if not all([isinstance(x, NmapScanner) for x in args]):
