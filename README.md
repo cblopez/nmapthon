@@ -340,8 +340,8 @@ plus additional `**kwargs`
 - `merge_udp=True`: Flag to allow UDP merging 
 - `merge_scripts=True`: Flag to merge host scripts. TCP/UDP port scripts are merged if their respective flag is `True`.
 - `merge_trace=True`: Merge Traceroute information. 
-- `merge_os`: Merge OS information.  
-- `merge_non_scanned`: Merge IPs that could not be scanned.
+- `merge_os=True`: Merge OS information.  
+- `merge_non_scanned=True`: Merge IPs that could not be scanned.
 
 ### `merge()` deep inspect  
 The `merge()` method acts differently depending on a main condition, which is: "Does the instance that's calling the method have the target X?". Depending on the answer: 
