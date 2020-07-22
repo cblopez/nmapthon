@@ -11,6 +11,7 @@ A complete, high level Nmap module for Python.
     - #### [**Services**](https://github.com/cblopez/nmapthon/blob/master/README.md#service-information)
     - #### [**OS Detection**](https://github.com/cblopez/nmapthon/blob/master/README.md#os-detection-1)  
     - #### [**Host scripts and Traceroute**](https://github.com/cblopez/nmapthon/blob/master/README.md#host-scripts)  
+    - #### [**Merging NmapScanner objects**](https://github.com/cblopez/nmapthon/blob/master/README.md#merging-nmapscanner-objects)
   - ### [**AsyncNmapScanner**](https://github.com/cblopez/nmapthon/blob/master/README.md#asyncnmapscanner-1)  
     - #### [**Run the scanner**](https://github.com/cblopez/nmapthon/blob/master/README.md#run-the-scan)  
     - #### [**Properties and methods**](https://github.com/cblopez/nmapthon/blob/master/README.md#properties-and-methods-1)  
@@ -278,7 +279,8 @@ for most_acc_os in scanner.most_accurate_os('127.0.0.1'):
   
 ## Host Scripts  
 We can gather the information from the scripts that are host oriented. If looking for service oriented scripts, you can find  how to get them [here](https://github.com/cblopez/nmapthon/blob/master/README.md#service-information):  
-- `host_scripts(host:str)`: **Yield** every name and output for every script launched against the host.  
+- `host_scripts(host:str, script_name=None)`: **Yield** every name and output for every script launched against the host. If `script_name` is set to a string, 
+only the scripts containing that string will be yielded, i.e. `sc.host_scripts('127.0.0.1'), script_anme='smtp'`) 
   
 ## Traceroute information  
 Get every hop information from executing a traceroute to a particular host:  
@@ -320,7 +322,100 @@ if '85.65.234.12' in scanner.scanned_hosts():
         print('TTL: {}\tIP address: {}'.format(tracehop_instance.ttl, tracehop_instance.ip_addr))
 ```  
 
----
+---  
+
+# Merging NmapScanner objects  
+
+There may be situations where several `NmapScanner` instances may be instantiated separately, so a `merge()` is available to 
+merge scans. It must be called after the instance finishes the scan, and it accepts any number of other `NmapScanner` instances 
+plus additional `**kwargs`
+- `merge_tcp=True`: Flag to allow TCP merging
+- `merge_udp=True`: Flag to allow UDP merging 
+- `merge_scripts=True`: Flag to merge host scripts. TCP/UDP port scripts are merged if their respective flag is `True`.
+- `merge_trace=True`: Merge Traceroute information. 
+- `merge_os`: Merge OS information.  
+- `merge_non_scanned`: Merge IPs that could not be scanned.
+
+### `merge()` deep inspect  
+The `merge()` method acts differently depending on a main condition, which is: "Does the instance that's calling the method have the target X?". Depending on the answer: 
+- If the target is not in the caller scanner, all the information from the target is copied depending on the `**kwargs` flags values.
+- If the target is on the caller scanner, the information is copied depending on the flags, particularly:
+  - TCP/UDP ports are copied if they where not scanned on the caller scan, but if the caller already has information 
+  about them, it's not overwritten.
+  - OS information, as well as Host scripts are checked one by one, only adding them if the caller does not have information of a particular OS/script.
+  - Traceroute is only added while no Traceroute information is in the caller scanner.  
+
+## Example 1: Dividing TCP and UDP scans  
+```python
+import nmapthon as nm
+
+# Run a TCP scan synchronously and a UDP async to the same target
+main_scanner = nm.NmapScanner('10.10.10.2', ports=[22, 80, 443], arguments='-sV -sS -n')
+udp_scanner = nm.AsyncNmapScanner('10.10.10.2', ports=[21, 53], arguments='-sU -n', mute_error=True)
+
+# Launch the UDP first
+udp_scanner.run()
+
+# Launch the TCP
+try:
+    main_scanner.run()
+except nm.NmapScanError as e:
+    print('Error while scanning TCP ports:\n{}'.format(e))
+
+# Wait until UDP ends
+udp_scanner.wait()
+
+if udp_scanner.finished_successfully():
+    # Merge the scans (Do not need to set all flags to False since there is no information on the UDP scanner,
+    # but just to show the usage thay are set to False here
+    main_scanner.merge(udp_scanner, merge_os=False, merge_scripts=False, merge_tcp=False, merge_trace=False)
+```  
+
+## Example 2: Multi-threading/processing scans
+```python
+import nmapthon as nm
+import multiprocessing
+
+def read_ips(ips_file):
+    with open(ips_file) as f:
+        return [x.strip() for x in f.readlines()]
+
+def worker(n, ip, return_dict):
+    sc = nm.NmapScanner(ip, ports=[1-1000], arguments='-sT -sV -T4 -n')
+    try:
+        sc.run()
+    except nm.NmapScanner as e:
+        raise e
+    return_dict[n] = sc
+
+
+if __name__ == '__main__':
+    # Create share dict to store scans
+    manager = multiprocessing.Manager()
+    return_dict = manager.dict()
+    jobs = []
+    # Read IPS from file
+    ips = read_ips('my_ips_file.txt')
+    for i in range(len(ips)):
+        p = multiprocessing.Process(target=worker, args=(i, ips[i], return_dict))
+        jobs.append(p)
+        p.start()
+    
+    # Freeze application until all apps finish
+    for proc in jobs:
+        proc.join()
+    
+    # Take the first scanner as caller
+    main_scan = return_dict[0]
+    # Pass the rest of the scans as arguments for merging
+    main_scan.merge(*return_dict[1:])
+    
+    # Now you can use the main_scan as a single scanner with all the information
+    for host in main_scan:
+        ......
+```
+---  
+
 # AsyncNmapScanner  
 Class for executing background nmap scans.  
   
@@ -448,12 +543,13 @@ __*Need to execute the__ `run()` __method before using this property, otherwise 
 | `most_accurate_os(host:str)`* | `list` | Return a list of all OS matches with maximum accuracy. |  
 | `service(host:str, protocol:str, port:str,int)`* | `Service`, `None` | Return a `Service` instance representing the service running on a port, for a given host and protocol. `None` if no service was found. |  
 | `standard_service_info(host:str, protocol:str, port:str,int)`* | `tuple` | Return a tuple containing the service name and service version information. Returns `(None, None)` if none of them were found. | 
-| `port_scripts(host:str, protocol:str, port:str,int)`* | `generator` | **Yield** every `(script_name, script_output)` for every script launched against a port, for a given host and protocol. |  
-| `host_scripts(host:str)`* | `generator` | **Yield** every `(script_name, script_output)` for every script launched against a given host. |  
+| `port_scripts(host:str, protocol:str, port:str,int, script_name=None)`* | `generator` | **Yield** every `(script_name, script_output)` for every script launched against a port, for a given host and protocol. Specify a `script_name` to return only those scripts that contain the given word on their name.  |  
+| `host_scripts(host:str, script_name=None)`* | `generator` | **Yield** every `(script_name, script_output)` for every script launched against a given host. Specify a `script_name` to return only those scripts that contain the given word on their name. |  
 | `trace_info(host:str)`* | `generator` | **Yield** one `TraceHop` instance, representing a Traceroute hop, for every hop gathered. |  
+| `merge(*scanners:NmapScanner, merge_tcp=True, merge_udp=True, merge_os=True, merge_scripts=True, merge_trace=True, merge_non_scanned=True)`* | - | Merge the caller scan with any number of other `NmapScanner` instances. |  
   
   
-__*Need to execute the__ `run()` __method before using this method, otherwise it will raise `NmapScanError`__.__  
+__*Need to execute the__ `run()` __method before using this method, otherwise it will raise `NmapScanError`__.  
   
 ## AsyncNmapScanner  
 Here is a complete list of attributes and methods from the ´AsyncNmapScanner´ class.  
