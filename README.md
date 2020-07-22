@@ -11,7 +11,7 @@ A complete, high level Nmap module for Python.
     - #### [**Services**](https://github.com/cblopez/nmapthon/blob/master/README.md#service-information)
     - #### [**OS Detection**](https://github.com/cblopez/nmapthon/blob/master/README.md#os-detection-1)  
     - #### [**Host scripts and Traceroute**](https://github.com/cblopez/nmapthon/blob/master/README.md#host-scripts)  
-    - #### [**Merging NmapScanner objects**](https://github.com/cblopez/nmapthon/blob/master/README.md#merging-nmapscanner-objects)
+    - #### [**Merging NmapScanner objects**](https://github.com/cblopez/nmapthon/blob/master/README.md#merging-nmapscanner-objects-1)
   - ### [**AsyncNmapScanner**](https://github.com/cblopez/nmapthon/blob/master/README.md#asyncnmapscanner-1)  
     - #### [**Run the scanner**](https://github.com/cblopez/nmapthon/blob/master/README.md#run-the-scan)  
     - #### [**Properties and methods**](https://github.com/cblopez/nmapthon/blob/master/README.md#properties-and-methods-1)  
