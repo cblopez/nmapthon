@@ -31,6 +31,8 @@ Downloading the file from the 'src' folder and pasting it directly into your pro
 ---  
 # Changelog
 - Version 1.1.X: Added `merge()` function, `script_name` for script related functions and minor error correction.
+  
+---  
 
 # Classes  
 
