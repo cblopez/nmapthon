@@ -171,8 +171,8 @@ for host in host_that_responded:
     print("Host: {}\tState: {}\tReason: {}".format(host, scanner.state(host), scanner.reason(host))    
     for hostname in scanner.hostnames(host):
         print("Hostname: {}".format(hostname))
-    # Get scanned protocols
-    for proto in scanner.all_protocols(proto):
+        # Get scanned protocols
+    for proto in scanner.all_protocols(host):
         # Get scanned ports
         for port in scanner.scanned_ports(host, proto): 
             state, reason = scanner.port_state(host, proto, port)
