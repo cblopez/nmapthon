@@ -3,6 +3,7 @@ A complete, high level Nmap module for Python.
 &nbsp;
   
 - ## [**Home**](https://github.com/cblopez/nmapthon/blob/master/README.md#welcome-to-the-nmapthon-wiki-a-high-level-nmap-module-for-python)
+- ## [**Changelog**](https://github.com/cblopez/nmapthon/blob/master/README.md#changelog)
 - ## [**Classes**](https://github.com/cblopez/nmapthon/blob/master/README.md#classes-1)  
   - ### [**NmapScanner**](https://github.com/cblopez/nmapthon/blob/master/README.md#nmapscanner-1)
     - #### [**Run the scanner**](https://github.com/cblopez/nmapthon/blob/master/README.md#running-the-scan)
@@ -20,12 +21,16 @@ A complete, high level Nmap module for Python.
 
 ---
 # Welcome to the Nmapthon Wiki! A high level Nmap module for Python.  
----
+
 ## Installation (with pip)  
 Update your `pip` utility with `pip install pip --upgrade` and then `pip install nmapthon`.
 
 ## Installation (Manual)  
 Downloading the file from the 'src' folder and pasting it directly into your proyect and import it. **No aditional modules are needed to run this library, everything is achieved by vanilla Python modules.**  
+
+---  
+# Changelog. 
+- Version 1.1.X: Added `merge()` function, `script_name` for script related functions and minor error correction.
 
 # Classes  
 
