@@ -415,7 +415,7 @@ if __name__ == '__main__':
     # Take the first scanner as caller
     main_scan = return_dict[0]
     # Pass the rest of the scans as arguments for merging
-    main_scan.merge(*return_dict[1:])
+    main_scan.merge(*list(return_dict.values())[1:])
     
     # Now you can use the main_scan as a single scanner with all the information
     for host in main_scan:
