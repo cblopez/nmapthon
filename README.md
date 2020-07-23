@@ -3,6 +3,7 @@ A complete, high level Nmap module for Python.
 &nbsp;
   
 - ## [**Home**](https://github.com/cblopez/nmapthon/blob/master/README.md#welcome-to-the-nmapthon-wiki-a-high-level-nmap-module-for-python)
+- ## [**Changelog**](https://github.com/cblopez/nmapthon/blob/master/README.md#changelog-1)
 - ## [**Classes**](https://github.com/cblopez/nmapthon/blob/master/README.md#classes-1)  
   - ### [**NmapScanner**](https://github.com/cblopez/nmapthon/blob/master/README.md#nmapscanner-1)
     - #### [**Run the scanner**](https://github.com/cblopez/nmapthon/blob/master/README.md#running-the-scan)
@@ -11,7 +12,7 @@ A complete, high level Nmap module for Python.
     - #### [**Services**](https://github.com/cblopez/nmapthon/blob/master/README.md#service-information)
     - #### [**OS Detection**](https://github.com/cblopez/nmapthon/blob/master/README.md#os-detection-1)  
     - #### [**Host scripts and Traceroute**](https://github.com/cblopez/nmapthon/blob/master/README.md#host-scripts)  
-    - #### [**Merging NmapScanner objects**](https://github.com/cblopez/nmapthon/blob/master/README.md#merging-nmapscanner-objects)
+    - #### [**Merging NmapScanner objects**](https://github.com/cblopez/nmapthon/blob/master/README.md#merging-nmapscanner-objects-1)
   - ### [**AsyncNmapScanner**](https://github.com/cblopez/nmapthon/blob/master/README.md#asyncnmapscanner-1)  
     - #### [**Run the scanner**](https://github.com/cblopez/nmapthon/blob/master/README.md#run-the-scan)  
     - #### [**Properties and methods**](https://github.com/cblopez/nmapthon/blob/master/README.md#properties-and-methods-1)  
@@ -20,12 +21,18 @@ A complete, high level Nmap module for Python.
 
 ---
 # Welcome to the Nmapthon Wiki! A high level Nmap module for Python.  
----
+
 ## Installation (with pip)  
 Update your `pip` utility with `pip install pip --upgrade` and then `pip install nmapthon`.
 
 ## Installation (Manual)  
 Downloading the file from the 'src' folder and pasting it directly into your proyect and import it. **No aditional modules are needed to run this library, everything is achieved by vanilla Python modules.**  
+
+---  
+# Changelog
+- Version 1.1.X: Added `merge()` function, `script_name` for script related functions and minor error correction.
+  
+---  
 
 # Classes  
 
@@ -164,8 +171,8 @@ for host in host_that_responded:
     print("Host: {}\tState: {}\tReason: {}".format(host, scanner.state(host), scanner.reason(host))    
     for hostname in scanner.hostnames(host):
         print("Hostname: {}".format(hostname))
-    # Get scanned protocols
-    for proto in scanner.all_protocols(proto):
+        # Get scanned protocols
+    for proto in scanner.all_protocols(host):
         # Get scanned ports
         for port in scanner.scanned_ports(host, proto): 
             state, reason = scanner.port_state(host, proto, port)
@@ -333,8 +340,8 @@ plus additional `**kwargs`
 - `merge_udp=True`: Flag to allow UDP merging 
 - `merge_scripts=True`: Flag to merge host scripts. TCP/UDP port scripts are merged if their respective flag is `True`.
 - `merge_trace=True`: Merge Traceroute information. 
-- `merge_os`: Merge OS information.  
-- `merge_non_scanned`: Merge IPs that could not be scanned.
+- `merge_os=True`: Merge OS information.  
+- `merge_non_scanned=True`: Merge IPs that could not be scanned.
 
 ### `merge()` deep inspect  
 The `merge()` method acts differently depending on a main condition, which is: "Does the instance that's calling the method have the target X?". Depending on the answer: 
@@ -408,7 +415,7 @@ if __name__ == '__main__':
     # Take the first scanner as caller
     main_scan = return_dict[0]
     # Pass the rest of the scans as arguments for merging
-    main_scan.merge(*return_dict[1:])
+    main_scan.merge(*list(return_dict.values())[1:])
     
     # Now you can use the main_scan as a single scanner with all the information
     for host in main_scan:
