@@ -55,7 +55,7 @@ On the other hand, `kwargs` are:
    
 - `ports`: Specify the ports to scan in two different accepted formats. In str format, sepecify a port range like `'20-100'`, a number of individual ports separated by a comma like `'22,53'`, a single port like `'22'` or any combination between these options like `'22,53,100-300'`. In list format, built by single int or str port values: `[22, 53, 100]` or `['22', '53', '100']`. 
 **If no ports are specified, nmap will scan the default ports. As well as `targets`, this attribute has a setter:**  
-`scanner_instance.ports = range(1, 1025) # Yeah, you can use range()!`  
+`scanner_instance.ports = list(range(1, 1025)) # Yeah, you can use range()!`  
 - `arguments`: String containing every nmap parameter that we want to execute. For example `'-sV -Pn'`.  
 **Note: No `-d` or `-v` options allowed (That means no debugging or verbosity). The `-p` parameter is not allowed either, ports must be specified on instantiation or by the `ports` setter as explained above. No IP addresses will be allowed, targets must be specified on instantiation or by the `targets` setter as explained above.**`arguments` **has also a setter:**  
 `scanner_instance.arguments = '-sS -T2'`  
@@ -72,7 +72,7 @@ scanner = nm.NmapScanner('127.0.0.1', arguments='-sV')
 scanner = nm.NmapScanner(['192.168.1.1', '192.168.1.11', '192.168.1.34'], arguments='-A -T4')
 
 # This one scans localhost, SYN scan for the first 200 ports. His name is 'Mapy'  
-scanner = nm.NmapScanner('127.0.0.1', name='Mapy', ports=range(1,201))
+scanner = nm.NmapScanner('127.0.0.1', name='Mapy', ports=list(range(1,201)))
 ```
 ### Errors  
 During instantiation, some errors can be raised:  
@@ -90,7 +90,7 @@ import nmapthon as nm
 example_scanner = nm.NmapScanner(target='127.0.0.1', arguments='-sS')  
 
 # Execute the scan
-example.scanner.run()
+example_scanner.run()
 
 # Now the 'example_scanner' object contains all the information from the scan.
 ```  
