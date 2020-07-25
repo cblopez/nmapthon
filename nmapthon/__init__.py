@@ -27,6 +27,8 @@ import subprocess
 import threading
 import xml.etree.ElementTree as ET
 
+from inspect import signature
+
 
 #######################################
 # Exception Classes
@@ -67,6 +69,14 @@ class XMLParsingError(Exception):
 
 class NmapScanError(Exception):
     """ Exception class for nmap scanning errors.
+    """
+
+    def __init__(self, message):
+        Exception.__init__(self, message)
+
+
+class NmapthonRegistryError(Exception):
+    """ Exception class for errors while registering functions
     """
 
     def __init__(self, message):
@@ -685,7 +695,8 @@ class NmapScanner:
         arguments: List of arguments or string containing them.
     """
 
-    PY_NSE_SCRIPTS = []
+    _NMTH_PY_NSE_SCRIPTS = []
+    _NMTH_REGISTERED_FUNCTIONS = []
 
     def __init__(self, targets, **kwargs):
         self.name = kwargs.get('name')
@@ -706,6 +717,33 @@ class NmapScanner:
         self._tolerant_errors = None
 
         self._finished = False
+
+    @classmethod
+    def register(cls, parser_function, custom_attributes, args=None):
+        """ Register a new callback function and a series of attributes into the NmapScanner class. The callback
+        function passed to the class must be a function only receiving as parameter the XML output of the scan. The
+        function must return any number of data processed from the XML.
+         """
+        if not callable(parser_function):
+            raise NmapthonRegistryError('The NmapScanner.register() method receives a function as first argument.')
+
+        if ',' in str(signature(parser_function)):
+            raise NmapthonRegistryError('The function passed to the register() method must have only one argument, '
+                                        'which is the XML output.')
+
+        if isinstance(custom_attributes, str):
+            custom_attributes = [custom_attributes]
+
+        elif not isinstance(custom_attributes, list):
+            raise NmapthonRegistryError('Attribute names passed to register() must be a list of strings or a '
+                                        'single string')
+
+        if not all([isinstance(x, str) for x in custom_attributes]):
+            raise NmapthonRegistryError('register() needs a list of strings of attributes as second parameter')
+
+        if args is not None:
+            if not isinstance(args, list) or not isinstance(args, tuple):
+                raise NmapthonRegistryError('The args parameter must be a list or tuple of arguments.')
 
     @property
     def name(self):
