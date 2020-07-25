@@ -685,6 +685,8 @@ class NmapScanner:
         arguments: List of arguments or string containing them.
     """
 
+    PY_NSE_SCRIPTS = []
+
     def __init__(self, targets, **kwargs):
         self.name = kwargs.get('name')
         self.targets = targets
