@@ -12,5 +12,11 @@ with open('README.md') as f:
         description='A high level Nmap module for Python',
         long_description=f.read(),
         long_description_content_type='text/markdown',
+        classifiers=[
+            'Development Status :: 4 - Beta',
+            'Programming Language :: Python :: 3 :: Only',
+            'Topic :: System :: Networking',
+            'Topic :: Software Development :: Libraries :: Python Modules'
+        ],
         keywords=['python', 'python3', 'nmap', 'module', 'scan', 'nse', 'port', 'service']
     )

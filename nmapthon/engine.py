@@ -14,7 +14,7 @@
 
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# FITNESS FOR A PARTICULAR PURPOSE AND NON INFRINGEMENT. IN NO EVENT SHALL THE
 # AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
@@ -58,6 +58,8 @@ class PyNSEScript:
         self.proto = proto
         self.args = args
         self.states = states
+
+        self._host_script = True
 
     @property
     def name(self):
@@ -228,10 +230,9 @@ class PyNSEEngine:
         def decorator(f):
             self.PYNSEScripts[len(self.PYNSEScripts) - 1].states = states
             return f
-
         return decorator
 
-    def args(self, *args, **kwargs):
+    def args(self, *args):
         """ A decorator to define the arguments of the function that is being passed to the engine. The arguments
         are passed separately and need to be the same number of arguments needed by the function
 
@@ -242,16 +243,3 @@ class PyNSEEngine:
             self.PYNSEScripts[len(self.PYNSEScripts) - 1].args = args
             return f
         return decorator
-
-
-if __name__ == '__main__':
-
-    engine = PyNSEEngine()
-
-    @engine.states(['open', 'filtered'])
-    @engine.args('Nmapthon')
-    @engine.register_port_script('my_py_nse_script', 22, proto='tcp')
-    def example_func(my_argument):
-        return 'Hello World! My arg: {}'.format(my_argument)
-
-    print(engine.PYNSEScripts[0].execute())
