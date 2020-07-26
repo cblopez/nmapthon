@@ -27,6 +27,8 @@ import subprocess
 import threading
 import xml.etree.ElementTree as ET
 
+from inspect import signature
+
 
 #######################################
 # Exception Classes
@@ -67,6 +69,14 @@ class XMLParsingError(Exception):
 
 class NmapScanError(Exception):
     """ Exception class for nmap scanning errors.
+    """
+
+    def __init__(self, message):
+        Exception.__init__(self, message)
+
+
+class NmapthonRegistryError(Exception):
+    """ Exception class for errors while registering functions
     """
 
     def __init__(self, message):
@@ -684,6 +694,9 @@ class NmapScanner:
         ports: List of ports or string containing them.
         arguments: List of arguments or string containing them.
     """
+
+    _NMTH_PY_NSE_SCRIPTS = []
+    _NMTH_REGISTERED_FUNCTIONS = {}
 
     def __init__(self, targets, **kwargs):
         self.name = kwargs.get('name')
