@@ -87,7 +87,7 @@ After [instantiating](https://github.com/cblopez/nmapthon/wiki/NmapScanner#Insta
 ```python  
 import nmapthon as nm
 
-example_scanner = nm.NmapScanner(target='127.0.0.1', arguments='-sS')  
+example_scanner = nm.NmapScanner('127.0.0.1', arguments='-sS')  
 
 # Execute the scan
 example_scanner.run()
