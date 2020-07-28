@@ -221,7 +221,7 @@ class PyNSEEngine:
         """
         self.host_scripts.append(PyNSEHostScript(name, func, args))
 
-    def register_port_script(self, name, port, proto='*', states=None, args=None):
+    def port_script(self, name, port, proto='*', states=None, args=None):
         """ A decorator to register the given function into the PyNSEEngine as a port script.
 
         :param name: Name of the function/script to be used later on to retrieve the information gathered by it.
@@ -240,7 +240,7 @@ class PyNSEEngine:
             return f
         return decorator
 
-    def register_host_script(self, name, args=None):
+    def host_script(self, name, args=None):
         """ A decorator to register the given function into the PyNSEEngine as a host script
 
         :param name: Name of the function/script to be used later on to retrieve the information gathered by it.
