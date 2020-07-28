@@ -693,6 +693,7 @@ class NmapScanner:
         targets: List of targets or string containing them.
         ports: List of ports or string containing them.
         arguments: List of arguments or string containing them.
+        engine: PyNSEEngine object used to associate python functions as if they where NSE port/host scripts
     """
 
     _NMTH_PY_NSE_SCRIPTS = []
@@ -703,6 +704,7 @@ class NmapScanner:
         self.targets = targets
         self.ports = kwargs.get('ports')
         self.scan_arguments = kwargs.get('arguments')
+        self.engine = kwargs.get('engine', None)
         self._start_timestamp = None
         self._exit_status = None
         self._start_time = None
@@ -735,6 +737,12 @@ class NmapScanner:
         """ Ports string for nmap.
         """
         return self._ports
+
+    @property
+    def engine(self):
+        """ PyNSEEngine object
+        """
+        return self._engine
 
     @property
     def scan_arguments(self):
@@ -896,6 +904,19 @@ class NmapScanner:
             raise InvalidArgumentError('Scanner arguments must be a string or a list of arguments.')
 
         assert isinstance(self.scan_arguments, list) or arguments is None
+
+    @engine.setter
+    def engine(self, v):
+        """ Checks if the value is None or, in other case, a PyNSEEngine instance
+        """
+        if v is not None:
+            if isinstance(v, engine.PyNSEEngine):
+                self._engine = v
+            else:
+                raise NmapScanError('Invalid engine instance type: {}. It needs to the a PyNSEEngine object'
+                                    .format(type(v)))
+        else:
+            self._engine = v
 
     def __is_valid_port(self, port):
         """Checks if a given value might be an existing port. Must be between 1 and 65535, both included.

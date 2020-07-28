@@ -189,9 +189,8 @@ class PyNSEEngine:
     """
 
     def __init__(self):
-        self._was_registered = False
-
-        self.PYNSEScripts = []
+        self.host_scripts = []
+        self.port_scripts = []
 
     def _register_port_script(self, func, name, port, proto, states, args):
         """ Register a given function to execute on a given port
@@ -208,7 +207,7 @@ class PyNSEEngine:
         :type states: None, list
         :type args: None, list, tuple
         """
-        self.PYNSEScripts.append(PyNSEPortScript(name, func, port, proto, args, states))
+        self.port_scripts.append(PyNSEPortScript(name, func, port, proto, args, states))
 
     def _register_host_script(self, func, name, args=None):
         """ Register a given function to execute on a hosts
@@ -220,10 +219,10 @@ class PyNSEEngine:
         :type name: str
         :type args: None, list, tuple
         """
-        self.PYNSEScripts.append(PyNSEHostScript(name, func, args))
+        self.host_scripts.append(PyNSEHostScript(name, func, args))
 
     def register_port_script(self, name, port, proto='*', states=None, args=None):
-        """ A decorator to register the given function into the PyNSEEngine.
+        """ A decorator to register the given function into the PyNSEEngine as a port script.
 
         :param name: Name of the function/script to be used later on to retrieve the information gathered by it.
         :param port: Port(s) to be affected by the function
@@ -241,3 +240,15 @@ class PyNSEEngine:
             return f
         return decorator
 
+    def register_host_script(self, name, args=None):
+        """ A decorator to register the given function into the PyNSEEngine as a host script
+
+        :param name: Name of the function/script to be used later on to retrieve the information gathered by it.
+        :param args: Function arguments
+        :type name: str
+        :type args: None, list, tuple
+        """
+        def decorator(f):
+            self._register_host_script(f, name, args)
+            return f
+        return decorator
