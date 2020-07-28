@@ -243,3 +243,27 @@ class PyNSEEngine:
             self.PYNSEScripts[len(self.PYNSEScripts) - 1].args = args
             return f
         return decorator
+
+    def exec_all(self):
+        """ For testing """
+        for i in self.PYNSEScripts:
+            i.execute()
+
+
+if __name__ == '__main__':
+
+    engine = PyNSEEngine()
+
+    @engine.states(['open', 'filtered'])
+    @engine.args('Nmapthon')
+    @engine.register_port_script('example_py', 22, proto='tcp')
+    def example(my_arg):
+        print('Hello {}!'.format(my_arg))
+
+    """
+    @engine.register_port_script('example_py', 22, proto='tcp', states=['open'], args=('Nmapthon',))
+    def example(my_arg):
+        print('Hello {}!'.format(my_arg))
+    """
+
+    engine.exec_all()
