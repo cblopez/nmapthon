@@ -30,36 +30,23 @@ class EngineError(Exception):
         super().__init__(msg)
 
 
-class PyNSEScript:
-    """ An individual Python function that is executed as if it were an Nmap NSE script.
+class PyNSEHostScript:
+    """ An individual Python function that is executed as if it were an Nmap NSE host script.
 
-    As well as those scripts, they can be host oriented or port oriented. It can have any number of arguments and
-    it can assign output to the NmapScanner object. The functions are only executed if the port or host (depending
-    on the function type) is open, but the user can also specify which of the three port states ('open', 'filtered'
-    or 'closed') are valid for the function to execute.
+    The script is represented by a name, a function to execute per alive host and the arguments to the function.
 
         :param name: Name of the function (PyNSEScript name)
         :param func: Function to execute
-        :param port: Port or ports to target. A None value means it is a host script
-        :param proto: Transport layer protocol ('tcp', 'udp' or '*' for both)
         :param args: Arguments for the function
-        :param states: List of states valid for function execution
         :type name: str
         :type func: function
-        :type port: str, int, list
         :type args: list, tuple
-        :type states: list, tuple
     """
 
-    def __init__(self, name, func, port, proto, args, states):
+    def __init__(self, name, func, args):
         self.name = name
         self.func = func
-        self.port = port
-        self.proto = proto
         self.args = args
-        self.states = states
-
-        self._host_script = True
 
     @property
     def name(self):
@@ -70,20 +57,8 @@ class PyNSEScript:
         return self._func
 
     @property
-    def port(self):
-        return self._port
-
-    @property
-    def proto(self):
-        return self._proto
-
-    @property
     def args(self):
         return self._args
-
-    @property
-    def states(self):
-        return self._states
 
     @name.setter
     def name(self, v):
@@ -95,6 +70,62 @@ class PyNSEScript:
             raise EngineError('Function parameter is not callable: {}'.format(v))
 
         self._func = v
+
+    @args.setter
+    def args(self, v):
+        if v is None:
+            self._args = []
+        else:
+            number_args = len(str(signature(self.func)).split(','))
+            if not isinstance(v, list) and not isinstance(v, tuple):
+                raise EngineError('Invalid args data type: {}'.format(type(v)))
+            if number_args != len(v):
+                raise EngineError('Number of function arguments does not match with specified arguments')
+
+            self._args = v
+
+    def execute(self):
+        """ Runs the function with the specific arguments and returns the output
+        """
+        if self.args is None:
+            return self.func
+        else:
+            return self.func(*self.args)
+
+
+class PyNSEPortScript(PyNSEHostScript):
+    """ Represents an NSE port script
+
+    As well as those scripts, it can have any number of arguments and it can assign output to the NmapScanner object.
+    The functions are only executed if the port or host (depending on the function type) is open,
+    but the user can also specify which of the three port states ('open', 'filtered'or 'closed') are valid for the
+    function to execute.
+
+        :param port: Port or ports to target. A None value means it is a host script
+        :param proto: Transport layer protocol ('tcp', 'udp' or '*' for both)
+        :param states: List of states valid for function execution
+        :type port: str, int, list
+        :type proto: str
+        :type states: list, tuple
+    """
+
+    def __init__(self, name, func, args, port, proto, states):
+        super().__init__(name, func, args)
+        self.port = port
+        self.proto = proto
+        self.states = states
+
+    @property
+    def port(self):
+        return self._port
+
+    @property
+    def proto(self):
+        return self._proto
+
+    @property
+    def states(self):
+        return self._states
 
     @port.setter
     def port(self, v):
@@ -115,7 +146,7 @@ class PyNSEScript:
 
         elif isinstance(v, list):
             try:
-                int_ports = map(int, v)
+                int_ports = list(map(int, v))
             except ValueError:
                 raise EngineError('Invalid port values')
             else:
@@ -136,19 +167,6 @@ class PyNSEScript:
         else:
             raise EngineError('Invalid proto value: {}'.format(v))
 
-    @args.setter
-    def args(self, v):
-        if v is None:
-            self._args = []
-        else:
-            number_args = len(str(signature(self.func)).split(','))
-            if not isinstance(v, list) and not isinstance(v, tuple):
-                raise EngineError('Invalid args data type: {}'.format(type(v)))
-            if number_args != len(v):
-                raise EngineError('Number of function arguments does not match with specified arguments')
-
-            self._args = v
-
     @states.setter
     def states(self, v):
 
@@ -161,16 +179,10 @@ class PyNSEScript:
         else:
             self._states = v
 
-    def execute(self):
-        """ Runs the function with the specific arguments and returns the output
-        """
-
-        return self.func(*self.args)
-
 
 class PyNSEEngine:
     """ Represents the Nmap NSE script engine. It is used to instantiate an object that is passed to the
-    NmapScanner __init__ method and it registers new "NSE scripts", that are function written in Python. These
+    NmapScanner __init__ method and it registers new "Python NSE scripts", that are function written in Python. These
     functions execute depending on the states defined by the user, and they can be host or port oriented.
 
     Several decorators are offered to make it easy for the user to include new functions.
@@ -181,89 +193,51 @@ class PyNSEEngine:
 
         self.PYNSEScripts = []
 
-    def _register_port_script(self, func, name, port, proto):
+    def _register_port_script(self, func, name, port, proto, states, args):
         """ Register a given function to execute on a given port
 
         :param func: Function to register
         :param name: Name of the function
         :param port: Port(s) affected
         :param proto: Protocol for the ports
+        :param states: Valid port states
         :type func: function
         :type name: str
         :type port: str, int, list
         :type proto: str
+        :type states: None, list
+        :type args: None, list, tuple
         """
-        self.PYNSEScripts.append(PyNSEScript(name, func, port, proto, None, None))
+        self.PYNSEScripts.append(PyNSEPortScript(name, func, port, proto, args, states))
 
-    def _register_host_script(self, func, name):
+    def _register_host_script(self, func, name, args=None):
         """ Register a given function to execute on a hosts
 
         :param func: Function to register
         :param name: Name of the function
+        :param args: Function arguments
         :type func: function
         :type name: str
+        :type args: None, list, tuple
         """
-        self.PYNSEScripts.append(PyNSEScript(name, func, None, None, None, None))
+        self.PYNSEScripts.append(PyNSEHostScript(name, func, args))
 
-    def register_port_script(self, name, port, proto='*'):
+    def register_port_script(self, name, port, proto='*', states=None, args=None):
         """ A decorator to register the given function into the PyNSEEngine.
 
         :param name: Name of the function/script to be used later on to retrieve the information gathered by it.
         :param port: Port(s) to be affected by the function
         :param proto: Protocol of the port to be affected by the function
+        :param states: List of states valid for function execution
+        :param args: Function arguments
         :type name: str
         :type port: list, int, str
         :type proto: str
+        :type states: None, list
+        :type args: None, tuple, list
         """
         def decorator(f):
-            self._register_port_script(f, name, port, proto)
+            self._register_port_script(f, name, port, proto, states, args)
             return f
         return decorator
 
-    def states(self, states):
-        """ A decorator to define the states of the port(s) when the function will be executed
-
-        :param states: List of states. Only 'open', 'closed' and 'filtered' are valid states
-        :type states: list
-        """
-
-        def decorator(f):
-            self.PYNSEScripts[len(self.PYNSEScripts) - 1].states = states
-            return f
-        return decorator
-
-    def args(self, *args):
-        """ A decorator to define the arguments of the function that is being passed to the engine. The arguments
-        are passed separately and need to be the same number of arguments needed by the function
-
-        :param args: List of arguments
-        :type args: list
-        """
-        def decorator(f):
-            self.PYNSEScripts[len(self.PYNSEScripts) - 1].args = args
-            return f
-        return decorator
-
-    def exec_all(self):
-        """ For testing """
-        for i in self.PYNSEScripts:
-            i.execute()
-
-
-if __name__ == '__main__':
-
-    engine = PyNSEEngine()
-
-    @engine.states(['open', 'filtered'])
-    @engine.args('Nmapthon')
-    @engine.register_port_script('example_py', 22, proto='tcp')
-    def example(my_arg):
-        print('Hello {}!'.format(my_arg))
-
-    """
-    @engine.register_port_script('example_py', 22, proto='tcp', states=['open'], args=('Nmapthon',))
-    def example(my_arg):
-        print('Hello {}!'.format(my_arg))
-    """
-
-    engine.exec_all()
