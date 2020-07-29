@@ -43,9 +43,10 @@ class PyNSEHostScript:
         :type args: list, tuple
     """
 
-    def __init__(self, name, func, args):
+    def __init__(self, name, func, target, args):
         self.name = name
         self.func = func
+        self.target = target
         self.args = args
 
     @property
@@ -55,6 +56,10 @@ class PyNSEHostScript:
     @property
     def func(self):
         return self._func
+
+    @property
+    def target(self):
+        return self._target
 
     @property
     def args(self):
@@ -70,6 +75,10 @@ class PyNSEHostScript:
             raise EngineError('Function parameter is not callable: {}'.format(v))
 
         self._func = v
+
+    @target.setter
+    def target(self, v):
+        self._target = v
 
     @args.setter
     def args(self, v):
@@ -88,7 +97,7 @@ class PyNSEHostScript:
         """ Runs the function with the specific arguments and returns the output
         """
         if self.args is None:
-            return self.func
+            return self.func()
         else:
             return self.func(*self.args)
 
