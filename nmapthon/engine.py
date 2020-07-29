@@ -43,11 +43,13 @@ class PyNSEHostScript:
         :type args: list, tuple
     """
 
-    def __init__(self, name, func, target, args):
+    def __init__(self, name, func, targets, args):
         self.name = name
         self.func = func
-        self.target = target
+        self.targets = targets
         self.args = args
+
+        self.current_target = None
 
     @property
     def name(self):
@@ -58,8 +60,8 @@ class PyNSEHostScript:
         return self._func
 
     @property
-    def target(self):
-        return self._target
+    def targets(self):
+        return self._targets
 
     @property
     def args(self):
@@ -76,9 +78,9 @@ class PyNSEHostScript:
 
         self._func = v
 
-    @target.setter
-    def target(self, v):
-        self._target = v
+    @targets.setter
+    def targets(self, v):
+        self._targets = v
 
     @args.setter
     def args(self, v):
@@ -118,11 +120,14 @@ class PyNSEPortScript(PyNSEHostScript):
         :type states: list, tuple
     """
 
-    def __init__(self, name, func, args, port, proto, states):
-        super().__init__(name, func, args)
+    def __init__(self, name, func, targets, args, port, proto, states):
+        super().__init__(name, func, targets, args)
         self.port = port
         self.proto = proto
         self.states = states
+
+        self.current_port = None
+        self.current_proto = None
 
     @property
     def port(self):
@@ -201,7 +206,11 @@ class PyNSEEngine:
         self.host_scripts = []
         self.port_scripts = []
 
-    def _register_port_script(self, func, name, port, proto, states, args):
+        self.current_target= None
+        self.current_port = None
+        self.current_proto = None
+
+    def _register_port_script(self, func, name, targets, port, proto, states, args):
         """ Register a given function to execute on a given port
 
         :param func: Function to register
@@ -216,9 +225,9 @@ class PyNSEEngine:
         :type states: None, list
         :type args: None, list, tuple
         """
-        self.port_scripts.append(PyNSEPortScript(name, func, port, proto, args, states))
+        self.port_scripts.append(PyNSEPortScript(name, func, targets, args, port, proto, states))
 
-    def _register_host_script(self, func, name, args=None):
+    def _register_host_script(self, func, name, targets, args=None):
         """ Register a given function to execute on a hosts
 
         :param func: Function to register
@@ -228,36 +237,70 @@ class PyNSEEngine:
         :type name: str
         :type args: None, list, tuple
         """
-        self.host_scripts.append(PyNSEHostScript(name, func, args))
+        self.host_scripts.append(PyNSEHostScript(name, func, targets, args))
 
-    def port_script(self, name, port, proto='*', states=None, args=None):
+    def port_script(self, name, port, targets='*', proto='*', states=None, args=None):
         """ A decorator to register the given function into the PyNSEEngine as a port script.
 
         :param name: Name of the function/script to be used later on to retrieve the information gathered by it.
         :param port: Port(s) to be affected by the function
+        :param targets: Targets to be affected by the function
         :param proto: Protocol of the port to be affected by the function
         :param states: List of states valid for function execution
         :param args: Function arguments
         :type name: str
         :type port: list, int, str
+        :type targets: str, list
         :type proto: str
         :type states: None, list
         :type args: None, tuple, list
         """
         def decorator(f):
-            self._register_port_script(f, name, port, proto, states, args)
+            self._register_port_script(f, name, targets, port, proto, states, args)
             return f
         return decorator
 
-    def host_script(self, name, args=None):
+    def host_script(self, name, targets='*', args=None):
         """ A decorator to register the given function into the PyNSEEngine as a host script
 
         :param name: Name of the function/script to be used later on to retrieve the information gathered by it.
+        :param targets: Targets to be affected by the function
         :param args: Function arguments
         :type name: str
+        :type targets: str
         :type args: None, list, tuple
         """
         def decorator(f):
-            self._register_host_script(f, name, args)
+            self._register_host_script(f, name, targets, args)
             return f
         return decorator
+
+    def _get_suitable_host_scripts(self, target):
+        """ Execute the host scripts for a given target
+
+        :param target: Target of the scripts
+        :type target: str
+        """
+        for i in self.host_scripts:
+            if isinstance(i.targets, list):
+                if target in i.targets:
+                    self.current_target = target
+                    yield i
+            else:
+                if i.targets == '*' or i.targets == target:
+                    self.current_target = target
+                    yield i
+
+
+if __name__ == '__main__':
+
+    engine = PyNSEEngine()
+
+    @engine.host_script('example')
+    def example():
+        print('This may be my custom SSH enum for {}!'.format(engine.current_target))
+        return 'No users ;('
+
+    for i in engine.get_suitable_host_scripts('127.0.0.1'):
+        some_var = i.execute()
+        print(some_var)

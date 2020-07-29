@@ -1311,6 +1311,15 @@ class NmapScanner:
         self._assign_class_attributes(parsed_nmap_output)
         # Set finished variable to True
         self._finished = True
+        self._execute_engine_scripts()
+
+    def _execute_engine_scripts(self):
+        """ Get all host and ports scripts from the PyNSEEngine in case its not None, and execute all its functions.
+        """
+        for i in self.scanned_hosts():
+            for j in self.engine._get_suitable_host_scripts(i):
+                self._result[i]['scripts'][i.name] = i.execute()
+
 
     def _assign_class_attributes(self, nmap_output):
         """ Assign class attributes (properties) from the dictionary coming from the parsed XML.
