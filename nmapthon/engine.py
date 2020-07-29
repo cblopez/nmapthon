@@ -290,17 +290,3 @@ class PyNSEEngine:
                 if i.targets == '*' or i.targets == target:
                     self.current_target = target
                     yield i
-
-
-if __name__ == '__main__':
-
-    engine = PyNSEEngine()
-
-    @engine.host_script('example')
-    def example():
-        print('This may be my custom SSH enum for {}!'.format(engine.current_target))
-        return 'No users ;('
-
-    for i in engine.get_suitable_host_scripts('127.0.0.1'):
-        some_var = i.execute()
-        print(some_var)
