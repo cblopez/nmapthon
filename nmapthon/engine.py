@@ -26,6 +26,7 @@ from inspect import signature
 class EngineError(Exception):
     """ Exception class for PyNSEEngine errors
     """
+
     def __init__(self, msg):
         super().__init__(msg)
 
@@ -80,7 +81,10 @@ class PyNSEHostScript:
 
     @targets.setter
     def targets(self, v):
-        self._targets = v
+        if not isinstance(v, str) and not isinstance(v, list):
+            raise EngineError('Invalid targets data type: {}'.format(type(v)))
+        else:
+            self._targets = v
 
     @args.setter
     def args(self, v):
@@ -206,9 +210,10 @@ class PyNSEEngine:
         self.host_scripts = []
         self.port_scripts = []
 
-        self.current_target= None
+        self.current_target = None
         self.current_port = None
         self.current_proto = None
+        self.current_state = None
 
     def _register_port_script(self, func, name, targets, port, proto, states, args):
         """ Register a given function to execute on a given port
@@ -255,9 +260,11 @@ class PyNSEEngine:
         :type states: None, list
         :type args: None, tuple, list
         """
+
         def decorator(f):
-            self._register_port_script(f, name, targets, port, proto, states, args)
+            self._register_port_script(f, name, targets, port, proto, states or ['open'], args)
             return f
+
         return decorator
 
     def host_script(self, name, targets='*', args=None):
@@ -270,23 +277,45 @@ class PyNSEEngine:
         :type targets: str
         :type args: None, list, tuple
         """
+
         def decorator(f):
             self._register_host_script(f, name, targets, args)
             return f
+
         return decorator
 
-    def _get_suitable_host_scripts(self, target):
-        """ Execute the host scripts for a given target
+    def get_suitable_host_scripts(self, target):
+        """ Yield the host scripts for a given target
 
         :param target: Target of the scripts
         :type target: str
         """
         for i in self.host_scripts:
-            if isinstance(i.targets, list):
-                if target in i.targets:
+            if (isinstance(i.targets, list) and target in i.targets) or (i.targets == '*' or i.targets == target):
+                self.current_target = target
+                yield i
+
+    def get_suitable_port_scripts(self, target, proto, port, state):
+        """ Yield the port scripts for a given target, protocol, port and port state
+
+        :param target: Target of the scripts
+        :param proto: Transport layer protocol
+        :param port: Target port
+        :param state: Target port state
+        :type target: str
+        :type proto: str,
+        :type port: int, str
+        :type state: str
+        """
+
+        for i in self.port_scripts:
+            if (isinstance(i.targets, list) and target in i.targets) or (i.targets == '*' or i.targets == target):
+                if (i.proto == '*' or proto in i.proto) and \
+                        ((isinstance(i.port, list) and port in i.port) or int(i.port) == int(port)) and \
+                        state in i.states:
                     self.current_target = target
-                    yield i
-            else:
-                if i.targets == '*' or i.targets == target:
-                    self.current_target = target
+                    self.current_proto = proto
+                    self.current_port = port
+                    self.current_state = state
+
                     yield i
