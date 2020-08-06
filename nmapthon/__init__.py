@@ -1233,13 +1233,13 @@ class NmapScanner:
         # Delete white spaces on sides and change multiple whitespaces with one
         arguments_string = ' '.join(arguments.split())
         # Raise InvalidArgumentError if -p, -v , -d or -o parameter.
-        if '-p' in arguments_string:
+        if ' -p ' in arguments_string:
             raise InvalidArgumentError('Ports must be specified on instance creation or by instance.ports setter.')
 
-        if '-v' in arguments_string:
+        if ' -v' in arguments_string:
             raise InvalidArgumentError('Scanner does not support verbosity parameter.')
 
-        if '-d' in arguments_string:
+        if ' -d ' in arguments_string:
             raise InvalidArgumentError('Scanner does not support debugging parameter.')
 
         # Split arguments with whitespaces
