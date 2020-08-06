@@ -319,3 +319,8 @@ class PyNSEEngine:
                     self.current_state = state
 
                     yield i
+
+                    self.current_target = None
+                    self.current_proto = None
+                    self.current_port = None
+                    self.current_state = None
