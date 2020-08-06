@@ -693,6 +693,7 @@ class NmapScanner:
         targets: List of targets or string containing them.
         ports: List of ports or string containing them.
         arguments: List of arguments or string containing them.
+        engine: PyNSEEngine object used to associate python functions as if they where NSE port/host scripts
     """
 
     _NMTH_PY_NSE_SCRIPTS = []
@@ -703,6 +704,7 @@ class NmapScanner:
         self.targets = targets
         self.ports = kwargs.get('ports')
         self.scan_arguments = kwargs.get('arguments')
+        self.engine = kwargs.get('engine', None)
         self._start_timestamp = None
         self._exit_status = None
         self._start_time = None
@@ -735,6 +737,12 @@ class NmapScanner:
         """ Ports string for nmap.
         """
         return self._ports
+
+    @property
+    def engine(self):
+        """ PyNSEEngine object
+        """
+        return self._engine
 
     @property
     def scan_arguments(self):
@@ -896,6 +904,12 @@ class NmapScanner:
             raise InvalidArgumentError('Scanner arguments must be a string or a list of arguments.')
 
         assert isinstance(self.scan_arguments, list) or arguments is None
+
+    @engine.setter
+    def engine(self, v):
+        """ Checks if the value is None or, in other case, a PyNSEEngine instance
+        """
+        self._engine = v
 
     def __is_valid_port(self, port):
         """Checks if a given value might be an existing port. Must be between 1 and 65535, both included.
@@ -1288,8 +1302,33 @@ class NmapScanner:
 
         # Assign class attributes from the parsed information.
         self._assign_class_attributes(parsed_nmap_output)
+        # Execute all the functions that were registered in the engine
+        self._execute_engine_scripts()
         # Set finished variable to True
         self._finished = True
+
+    def _execute_engine_scripts(self):
+        """ Get all host and ports scripts from the PyNSEEngine in case its not None, and execute all its functions.
+        """
+        for i in self._result:
+            for j in self.engine.get_suitable_host_scripts(i):
+                self._result[i]['scripts'].append({
+                    'name': j.name,
+                    'output': j.execute()
+                })
+
+            for proto in self._result[i]['protocols']:
+                for port in self._result[i]['protocols'][proto]:
+                    service_instance = None
+                    try:
+                        service_instance = self._result[i]['protocols'][proto][str(port)]['service']
+                    except KeyError:
+                        service_instance = Service('', '', '', '', [])
+                    finally:
+                        for k in self.engine.get_suitable_port_scripts(i, proto, port,
+                                                                       self._result[i]['protocols'][proto][str(port)][
+                                                                            'state']):
+                            service_instance[k.name] = k.execute()
 
     def _assign_class_attributes(self, nmap_output):
         """ Assign class attributes (properties) from the dictionary coming from the parsed XML.
