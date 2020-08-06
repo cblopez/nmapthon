@@ -76,6 +76,8 @@ instance/
 docs/_build/
 docs/.DS_Store
 
+OLD_README.md
+
 # PyBuilder
 target/
 
