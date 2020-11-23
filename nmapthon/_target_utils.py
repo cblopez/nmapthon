@@ -35,6 +35,10 @@ _IP_ADDRESS_WITH_CIDR_REGEX = re.compile('^{}/([0-9]|[1-2][0-9]|3[0-2])$'.format
 
 _IP_RANGE_REGEX = re.compile('^{}-{}$'.format(_BASE_IP_REGEX, _BASE_IP_REGEX))
 
+_OCTECT_RANGE_REGEX = '(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))'
+
+_PARTIAL_IP_RANGE_REGEX = re.compile('{}(-{})?\.{}(-{})?\.{}(-{})?\.{}(-{})?'.format(*[_OCTECT_RANGE_REGEX for _ in range(8)]))
+
 
 def is_ip_address(ip_address):
     """Checks if a given IP address is correctly formed.
@@ -79,6 +83,55 @@ def ip_range(starting_ip, ending_ip):
         ip_range.append(current_ip)
 
     return ip_range
+
+
+def partial_ip_range(ip_addr):
+    """ Calculates the list of IP address from a partial ranged IP expression.
+
+        :param ip_addr: IP Address from where to extract the IP s
+        :type ip_addr: str
+        :returns: List of IPs in partial range
+        :rtype: list
+    """
+
+    # Split by dots
+    split_ip = ip_addr.split('.')
+    # IPs to return
+    ips=[]
+    # List to store each part range
+    partial_ranges = []
+    # For each partial IPs part
+    for i in split_ip:
+        # If its a range
+        if '-' in i:
+            # Extract the list of numbers between
+            partial_range = i.split('-')
+            try:
+                start = int(partial_range[0])
+            except ValueError:
+                raise MalformedIpAddressError('Invalid start of range, expected number but got : {}'.format(partial_range[0]))
+            try:
+                end = int(partial_range[1])
+            except ValueError:
+                raise MalformedIpAddressError('Invalid start of range, expected number but got : {}'.format(partial_range[1]))
+
+            if not 0 <= start <= end <= 255:
+                raise MalformedIpAddressError('Start range must be lower than end range, and both between 0 adn 255')
+
+            partial_ranges.append(list(range(start, end + 1)))
+
+        # If not, add a list with a single element
+        else:
+            partial_ranges.append([i])
+    
+    # Combine them all
+    for first in partial_ranges[0]:
+        for second in partial_ranges[1]:
+            for third in partial_ranges[2]:
+                for forth in partial_ranges[3]:
+                    ips.append('.'.join([str(x) for x in [first, second, third, forth]]))
+    
+    return ips
 
 
 def dispatch_network(network):
@@ -184,6 +237,11 @@ def parse_targets_from_str(targets):
         elif _IP_ADDRESS_WITH_CIDR_REGEX.fullmatch(split_target):
             # Extend the list for dispatching the network
             target_list.extend(dispatch_network(split_target))
+
+        # If partial IP addresses
+        elif _PARTIAL_IP_RANGE_REGEX.fullmatch(split_target):
+            target_list.extend(partial_ip_range(split_target))
+
         # If it reaches here, guess single IP. Add to list or raise Error if malformed.
         else:
             target_list.append(split_target)
