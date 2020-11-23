@@ -20,18 +20,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import nmapthon._target_utils as tu
+import nmapthon._port_utils as pu
+
+from .exceptions import EngineError
 from inspect import signature
 
 
-class EngineError(Exception):
-    """ Exception class for PyNSEEngine errors
-    """
-
-    def __init__(self, msg):
-        super().__init__(msg)
-
-
-class PyNSEHostScript:
+class _PyNSEHostScript:
     """ An individual Python function that is executed as if it were an Nmap NSE host script.
 
     The script is represented by a name, a function to execute per alive host and the arguments to the function.
@@ -81,10 +77,15 @@ class PyNSEHostScript:
 
     @targets.setter
     def targets(self, v):
-        if not isinstance(v, str) and not isinstance(v, list):
-            raise EngineError('Invalid targets data type: {}'.format(type(v)))
-        else:
+        if isinstance(v, list):
             self._targets = v
+        elif isinstance(v, str):
+            if v.strip() == '*':
+                self._targets = v
+            else:
+                self._targets = tu.parse_targets_from_str(v)
+        else:
+            raise EngineError('Invalid targets data type: {}'.format(type(v)))
 
     @args.setter
     def args(self, v):
@@ -108,7 +109,7 @@ class PyNSEHostScript:
             return self.func(*self.args)
 
 
-class PyNSEPortScript(PyNSEHostScript):
+class _PyNSEPortScript(_PyNSEHostScript):
     """ Represents an NSE port script
 
     As well as those scripts, it can have any number of arguments and it can assign output to the NmapScanner object.
@@ -116,17 +117,17 @@ class PyNSEPortScript(PyNSEHostScript):
     but the user can also specify which of the three port states ('open', 'filtered'or 'closed') are valid for the
     function to execute.
 
-        :param port: Port or ports to target. A None value means it is a host script
+        :param ports: Port or ports to target. A None value means it is a host script
         :param proto: Transport layer protocol ('tcp', 'udp' or '*' for both)
         :param states: List of states valid for function execution
-        :type port: str, int, list
+        :type ports: str, int, list
         :type proto: str
         :type states: list, tuple
     """
 
-    def __init__(self, name, func, targets, args, port, proto, states):
+    def __init__(self, name, func, targets, args, ports, proto, states):
         super().__init__(name, func, targets, args)
-        self.port = port
+        self.ports = ports
         self.proto = proto
         self.states = states
 
@@ -134,8 +135,8 @@ class PyNSEPortScript(PyNSEHostScript):
         self.current_proto = None
 
     @property
-    def port(self):
-        return self._port
+    def ports(self):
+        return self._ports
 
     @property
     def proto(self):
@@ -145,36 +146,30 @@ class PyNSEPortScript(PyNSEHostScript):
     def states(self):
         return self._states
 
-    @port.setter
-    def port(self, v):
+    @ports.setter
+    def ports(self, v):
         if v is None:
-            self._port = v
+            self._ports = v
         elif isinstance(v, str):
-            try:
-                int_v = int(v)
-            except ValueError:
-                raise EngineError('Invalid port value: {}'.format(v))
-            else:
-                if not 1 <= int_v <= 65535:
-                    raise EngineError('Invalid port value, out of range: {}'.format(int_v))
-
-        elif isinstance(v, int):
-            if not 1 <= v <= 65535:
-                raise EngineError('Invalid port value, out of range: {}'.format(v))
+            self._ports = pu.parse_ports_from_str(v)
 
         elif isinstance(v, list):
             try:
                 int_ports = list(map(int, v))
             except ValueError:
-                raise EngineError('Invalid port values')
+                raise EngineError('Invalid port values') from None
             else:
                 if not all([1 <= x <= 65535 for x in int_ports]):
                     raise EngineError('Out of range ports inside ports list')
 
-        else:
-            raise EngineError('Invalid port data type: {}'.format(type(v)))
+        elif isinstance(v, int):
+            if not 1 <= v <= 65535:
+                raise EngineError('Out of range ports inside ports list')
 
-        self._port = v
+            self._ports = [v]
+
+        else:
+            raise EngineError('Invalid ports data type: {}'.format(type(v)))
 
     @proto.setter
     def proto(self, v):
@@ -230,7 +225,7 @@ class PyNSEEngine:
         :type states: None, list
         :type args: None, list, tuple
         """
-        self.port_scripts.append(PyNSEPortScript(name, func, targets, args, port, proto, states))
+        self.port_scripts.append(_PyNSEPortScript(name, func, targets, args, port, proto, states))
 
     def _register_host_script(self, func, name, targets, args=None):
         """ Register a given function to execute on a hosts
@@ -242,7 +237,7 @@ class PyNSEEngine:
         :type name: str
         :type args: None, list, tuple
         """
-        self.host_scripts.append(PyNSEHostScript(name, func, targets, args))
+        self.host_scripts.append(_PyNSEHostScript(name, func, targets, args))
 
     def port_script(self, name, port, targets='*', proto='*', states=None, args=None):
         """ A decorator to register the given function into the PyNSEEngine as a port script.
@@ -309,10 +304,8 @@ class PyNSEEngine:
         """
 
         for i in self.port_scripts:
-            if (isinstance(i.targets, list) and target in i.targets) or (i.targets == '*' or i.targets == target):
-                if (i.proto == '*' or proto in i.proto) and \
-                        ((isinstance(i.port, list) and port in i.port) or int(i.port) == int(port)) and \
-                        state in i.states:
+            if target in i.targets or i.targets == '*':
+                if (i.proto == '*' or proto in i.proto) and port in i.ports and state in i.states:
                     self.current_target = target
                     self.current_proto = proto
                     self.current_port = port

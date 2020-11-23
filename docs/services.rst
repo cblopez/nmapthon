@@ -12,30 +12,30 @@ Service object
 
 Executing the function ``service(host:str, protocol:str, port:int,str)`` will return ``None`` if there is no known service, or it will return a ``Service`` object in any other case. A ``Service`` object has 4 simple properties:
 
-- ``name``: Return the name of the service.  
-- ``product``: Return the product running on that service.  
-- ``version``: Return the version of the product.  
-- ``extrainfo``: Return extra information about the product.  
-  
+- ``name``: Return the name of the service.
+- ``product``: Return the product running on that service.
+- ``version``: Return the version of the product.
+- ``extrainfo``: Return extra information about the product.
+
 We can also get all CPEs associated with that service:
 
-- ``all_cpes()``: Return a list containing all the CPEs from a service.  
-  
+- ``all_cpes()``: Return a list containing all the CPEs from a service.
+
 Get all the scripts information that were launched against that particular service:
 
 - ``all_scripts()``: **Yields** every script name and output from every script that was launched against that service.
-  
+
 Service instances can be used as list objects, which allows scripts management, for example:
 
-- ``service_instance[script_name]``: Return the output from a given script name.  
-- ``service_instance[script_name] = script_output``: Add a script name with an associated output.  
+- ``service_instance[script_name]``: Return the output from a given script name.
+- ``service_instance[script_name] = script_output``: Add a script name with an associated output.
 - ``del service_instance[script_name]``: Delete every script related information for a given script name.
 - ``'my_script' in service_instance``: Check if a given script is inside the instance.
-  
+
 It also have a custom ``__str__`` method:
 
-- ``print(str(service_instance))``: Prints all the service info in a specific way.  
-  
+- ``print(str(service_instance))``: Prints all the service info in a specific way.
+
 Service object example
 ++++++++++++++++++++++
 
@@ -66,7 +66,7 @@ Service object example
                     if 'ssh-keys' in service:
                         print("{}".format(service['ssh-keys']))
 
-  
+
 Service standard info example
 +++++++++++++++++++++++++++++
 

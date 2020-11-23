@@ -30,4 +30,4 @@ When executing the ``run()`` method, several type of errors can pop, but all of 
 
 - No targets to scan are specified.
 - When nmapthon cannot parse the nmap output, due to any type of nmap error that interrupted the execution. In this case, the ``NmapScannerError`` will print the nmap error.
-- When no output from nmap is given. Should never happen but if it does, the ``NmapScannerError`` will print the nmap error.
+- When no output from nmap is given.

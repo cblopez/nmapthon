@@ -8,7 +8,6 @@ PyNSEEngine
    engine_host_script
    engine_port_script
    engine_values
-   engine_oop
 
 Any ``NmapScanner`` object may receive a ``PyNSEEngine`` object, where several functions can be registered as host or port scripts.
 

@@ -10,4 +10,5 @@ Nmapthon: A complete Nmap module for Python
    nmap_scanner
    async_scanner
    nmap_engine
+   errors
 
