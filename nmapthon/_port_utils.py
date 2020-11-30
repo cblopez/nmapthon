@@ -87,6 +87,24 @@ def parse_ports_from_str(ports):
 
     return sorted(list(set(port_list)))
 
+def single_port_list(port_list):
+    """ Transforms a port list with single ports and/or port ranges into a single list with no duplicates.
+
+    :param port_list: Port list to parse
+    :type port_list: list
+    :returns: List of single and unique ports
+    :rtype: list
+    """
+
+    # To STR
+    port_list = list(map(str, port_list))
+
+    new_port_list = []
+    for i in list(map(parse_ports_from_str, port_list)):
+        new_port_list.extend(i)
+    
+    return list(set(new_port_list))
+
 
 def parse_ports_from_list(port_list):
     """ Parse a list of int/str ports into a single str containing a port range that nmap can understand.
@@ -97,18 +115,15 @@ def parse_ports_from_list(port_list):
         :rtype: str
     """
 
-    # Try integer conversion, if ValueError raise NmapScanError
-    try:
-        int_port_list = map(int, port_list)
-    except ValueError:
-        raise InvalidPortError('Port list must be filled with int or str type ports.')
+    # Get unique list of single ports
+    new_port_list = single_port_list(port_list)
 
     # If not all ports are valid ports, raise NmapScanError
-    if not all(is_valid_port(p) for p in int_port_list):
+    if not all(is_valid_port(p) for p in new_port_list):
         raise InvalidPortError('Ports must be between 0 and 65536') from None
 
     # Sort ports in ascending order
-    sorted_ports = sorted(int_port_list)
+    sorted_ports = sorted(new_port_list)
     # Instantiate port string
     port_string = ''
     # Instantiate last port variable

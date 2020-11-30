@@ -78,7 +78,10 @@ class _PyNSEHostScript:
     @targets.setter
     def targets(self, v):
         if isinstance(v, list):
-            self._targets = v
+            new_list = []
+            for i in v:
+                new_list.extend(tu.parse_targets_from_str(i))
+            self._targets = list(new_list)
         elif isinstance(v, str):
             if v.strip() == '*':
                 self._targets = v
@@ -154,19 +157,10 @@ class _PyNSEPortScript(_PyNSEHostScript):
             self._ports = pu.parse_ports_from_str(v)
 
         elif isinstance(v, list):
-            try:
-                int_ports = list(map(int, v))
-            except ValueError:
-                raise EngineError('Invalid port values') from None
-            else:
-                if not all([1 <= x <= 65535 for x in int_ports]):
-                    raise EngineError('Out of range ports inside ports list')
+            self._ports = pu.single_port_list(v)
 
         elif isinstance(v, int):
-            if not 1 <= v <= 65535:
-                raise EngineError('Out of range ports inside ports list')
-
-            self._ports = [v]
+            self._ports = pu.parse_ports_from_str(str(v))
 
         else:
             raise EngineError('Invalid ports data type: {}'.format(type(v)))
@@ -175,7 +169,7 @@ class _PyNSEPortScript(_PyNSEHostScript):
     def proto(self, v):
         if v is None:
             self._proto = None
-        elif v.lower() in ['tcp', 'udp', '*']:
+        elif isinstance(v, str) and v.lower() in ['tcp', 'udp', '*']:
             self._proto = v.lower()
         else:
             raise EngineError('Invalid proto value: {}'.format(v))
@@ -305,7 +299,7 @@ class PyNSEEngine:
 
         for i in self.port_scripts:
             if target in i.targets or i.targets == '*':
-                if (i.proto == '*' or proto in i.proto) and port in i.ports and state in i.states:
+                if (i.proto == '*' or proto == i.proto) and int(port) in i.ports and state in i.states:
                     self.current_target = target
                     self.current_proto = proto
                     self.current_port = port

@@ -750,6 +750,10 @@ class NmapScanner:
         elif isinstance(ports, list):
             self._ports = pu.parse_ports_from_list(ports)
             self._port_list = ports
+        elif isinstance(ports, int):
+            ports = str(ports)
+            self._port_list = pu.parse_ports_from_str(ports)
+            self._ports = ports
         else:
             raise InvalidArgumentError('Scanner ports must be a string or a lit of ports')
 
@@ -893,15 +897,15 @@ class NmapScanner:
 
             for proto in self._result[i]['protocols']:
                 for port in self._result[i]['protocols'][proto]:
-                    service_instance = None
-                    try:
-                        service_instance = self._result[i]['protocols'][proto][str(port)]['service']
-                    except KeyError:
-                        service_instance = Service('', '', '', '', [])
-                    finally:
-                        for k in self.engine.get_suitable_port_scripts(i, proto, port,
-                                                                       self._result[i]['protocols'][proto][str(port)][
-                                                                            'state']):
+                    script_list = [x for x in self.engine.get_suitable_port_scripts(i, 
+                                  proto, port, self._result[i]['protocols'][proto][str(port)]['state'])]
+
+                    if len(script_list):
+                        try:
+                            service_instance = self._result[i]['protocols'][proto][str(port)]['service']
+                        except KeyError:
+                            service_instance = Service('', '', '', '', [])
+                        for k in script_list:
                             service_instance[k.name] = k.execute()
 
     def _assign_class_attributes(self, nmap_output):
