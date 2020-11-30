@@ -20,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import multiprocessing
 import subprocess
 import threading
 import xml.etree.ElementTree as ET
@@ -802,13 +803,13 @@ class NmapScanner:
         # Delete white spaces on sides and change multiple whitespaces with one
         arguments_string = ' '.join(arguments.split())
         # Raise InvalidArgumentError if -p, -v , -d or -o parameter.
-        if ' -p ' in arguments_string:
+        if ' -p' in arguments_string:
             raise InvalidArgumentError('Ports must be specified on instance creation or by instance.ports setter.')
 
         if ' -v' in arguments_string:
             raise InvalidArgumentError('Scanner does not support verbosity parameter.')
 
-        if ' -d ' in arguments_string:
+        if ' -d' in arguments_string:
             raise InvalidArgumentError('Scanner does not support debugging parameter.')
 
         # Split arguments with whitespaces
@@ -1128,9 +1129,9 @@ class NmapScanner:
             port = self._result[host]['protocols'][protocol][str(port)]
             return port['state'], port['reason']
         except KeyError as e:
-            if host in e:
+            if host in str(e):
                 raise NmapScanError('Host does not exist in the scan result.') from None
-            elif protocol in e:
+            elif protocol in str(e):
                 raise NmapScanError('Protocol does not exist for given host: {}'.format(host)) from None
             else:
                 raise NmapScanError('Port doest no exist in scan result for given host and'
@@ -1155,9 +1156,9 @@ class NmapScanner:
         try:
             return self._result[host]['protocols'][protocol][str(port)]['service']
         except KeyError as e:
-            if host in e:
+            if host in str(e):
                 raise NmapScanError('Host does not exist in the scan result.') from None
-            elif protocol in e:
+            elif protocol in str(e):
                 raise NmapScanError('Protocol does not exist for given host: {}'.format(host)) from None
             else:
                 raise NmapScanError('Port doest no exist in scan result for given host and'
@@ -1185,9 +1186,9 @@ class NmapScanner:
         try:
             service_instance = self._result[host]['protocols'][protocol][str(port)]['service']
         except KeyError as e:
-            if host in e:
+            if host in str(e):
                 raise NmapScanError('Host does not exist in the scan result.') from None
-            elif protocol in e:
+            elif protocol in str(e):
                 raise NmapScanError('Protocol does not exist for given host: {}'.format(host)) from None
             else:
                 raise NmapScanError('Port doest no exist in scan result for given host and'
@@ -1204,7 +1205,39 @@ class NmapScanner:
 
             return service_instance.name, service_detection_info
 
-    # TODO: Add to docs
+    @_has_finished
+    def port_script(self, host, protocol, port, script_name):
+        """ Returns the script output for a given host, protocol, port.
+
+            :param host: Host where to get the port info from
+            :param protocol: Protocol specification of the port
+            :param port: Target port
+            :param script_name: Script name
+            :type host: str
+            :type protocol: str
+            :type port: int, str
+            :type script_name: str
+            :returns: any
+        """
+
+        try:
+            service_instance = self._result[host]['protocols'][protocol][str(port)]['service']
+        except KeyError as e:
+            if host in str(e):
+                raise NmapScanError('Host does not exist in the scan result.') from None
+            elif protocol in str(e):
+                raise NmapScanError('Protocol does not exist for given host: {}'.format(host)) from None
+            else:
+                raise NmapScanError('Port doest no exist in scan result for given host and '
+                                    'protocol: {} - {}'.format(host, protocol)) from None
+
+        if service_instance is not None:
+            for n, o in service_instance.all_scripts():
+                if n == script_name:
+                    return o
+        raise NmapScanError('Host {}({}):{} does not have'
+                            ' any information related to {}'.format(host, protocol, port, script_name)) from None
+
     @_has_finished
     def port_scripts(self, host, protocol, port, script_name=None):
         """ Yields all scripts names and output that where executed for a specific port.
@@ -1225,20 +1258,40 @@ class NmapScanner:
         try:
             service_instance = self._result[host]['protocols'][protocol][str(port)]['service']
         except KeyError as e:
-            if host in e:
-                raise NmapScanError('Host does not exist in the scan result.') from None
-            elif protocol in e:
-                raise NmapScanError('Protocol does not exist for given host: {}'.format(host)) from None
+            if host in str(e):
+                raise NmapScanError('Host {} does not exist in the scan result.'.format(host)) from None
+            elif protocol in str(e):
+                raise NmapScanError('Protocol does not exist for given host: {}:{}'.format(host, protocol)) from None
             else:
-                raise NmapScanError('Port doest no exist in scan result for given host and'
-                                    'protocol: {} - {}'.format(host, protocol)) from None
-
-        scripts_list = service_instance.scripts.items() if script_name is None else \
-            [(x, y) for x, y in service_instance.scripts.items if script_name in x]
+                raise NmapScanError('Port {} doest no exist in scan result for given host and '
+                                    'protocol: {} - {}'.format(port, host, protocol)) from None
 
         if service_instance is not None:
+
+            scripts_list = service_instance.scripts.items() if script_name is None else \
+                           [(x, y) for x, y in service_instance.scripts.items if script_name in x]
+
             for name, output in scripts_list:
                 yield name, output
+
+    @_has_finished
+    def host_script(self, host, script_name):
+        """ Yields every name and output for each script launched to the host.
+
+            :param host: Host where to get the scripts info from
+            :param script_name: NSE script name
+            :type host: str
+            :type script_name: str
+            :returns: Script output
+            :rtype: any
+        """
+        host_scripts = self._result[host]['scripts'] if script_name is None else \
+                       [x for x in self._result[host]['scripts'] if script_name in x['name']]
+        for script in host_scripts:
+            if script['name'] == script_name:
+                return script['output']
+        raise NmapScanError('Host {} does not have'
+                            ' any information related to {}'.format(host, script_name)) from None
 
     @_has_finished
     def host_scripts(self, host, script_name=None):
@@ -1384,7 +1437,8 @@ class AsyncNmapScanner(NmapScanner):
 
     def __init__(self, **kwargs):
         NmapScanner.__init__(self, **kwargs)
-        self._mute_error = kwargs.get('mute_error') if kwargs.get('mute_error') is not None else False
+        self._mute_error = kwargs.get('mute_error', False)
+        self._wrapper = kwargs.get('wrapper', multiprocessing.Process)
         self._running = False
         self._had_fatal_errors = False
         self._exception_stack = []
@@ -1471,7 +1525,7 @@ class AsyncNmapScanner(NmapScanner):
 
         # If any error but method reaches this point, there are tolerant errors.
         if len(error):
-            self.__tolerant_errors = error
+            self._tolerant_errors = error
 
         # Assign class attributes from the parsed information.
         NmapScanner._assign_class_attributes(self, parsed_nmap_output)
@@ -1514,5 +1568,5 @@ class AsyncNmapScanner(NmapScanner):
         """ Creates a Thread and executes the __background_run() method, which is the normal NmapScanner.run()
         but with some variations adapted to the Async class attributes.
         """
-        self._execution_thread = threading.Thread(target=self._background_run, args=[])
+        self._execution_thread = self._wrapper(target=self._background_run, args=[])
         self._execution_thread.start()
