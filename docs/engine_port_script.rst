@@ -8,9 +8,9 @@ To register a port script, decorate the functions with ``@<engine_instance>.port
 ``port_script(name:str, port:(str,int,list), targets='*', proto='*', states=None, args=None)``:
 
 - ``name``: Name that will be used on the ``NmapScanner`` instance to reference the script output.
-- ``port``: Single port or list of ports that that, when found with the given states, will make the engine execute the function.
-- ``targets``: Specify the targets that will be affected by the function. ``'*'`` means all of them. It accepts a single target in ``str`` format or a list of them in a ``list`` or ``tuple``.
-- ``proto``: Transport layer protocol from the port. Default is ```*'`` which means anyone, but can be a ``list`` containing ``'tcp'`` and/or ``'udp'``.
+- ``port``: Single port or list of ports that, when found with the given states, will make the engine execute the function. They are specified the same way as ports are specified during the ``NmapScanner`` :doc:`instantiation`.
+- ``targets``: Specify the targets that will be affected by the function. ``'*'`` means all of them. Targets can be specified as an ``str`` or a ``list`` type, the same way as targets are specified during the ``NmapScanner`` :doc:`instantiation`.
+- ``proto``: Transport layer protocol from the port. Default is ```*'`` which means anyone, but can also be ``'tcp'`` or ``'udp'``.
 - ``states``: Port states when the function will be triggered. Default is ``None``, which means only ``'open'`` state, but can be a ``list`` containing any of the following values: ``'open'``, ``'filtered'`` and ``'closed'``.
 - ``args``: If the function has arguments, pass them as a ``tuple`` or ``list`` of arguments.
 
@@ -28,18 +28,12 @@ Example
     engine = nm.engine.PyNSEEngine()
 
     # Create a custom SSH enum function
-    @engine.host_script('custom_ssh_enum', 22, proto=['tcp'], states=['open', 'filtered'], args=('path/to/wordlist',))
-    def custom_gateway_scan(wordlist):
+    @engine.port_script('custom_ssh_enum', 22, proto='tcp', states=['open', 'filtered'], args=('path/to/wordlist',))
+    def ssh_enum_function(wordlist):
         return 'My SSH enum with the wordlist: {}'.format(wordlist)
 
-    sc = NmapScanner('192.168.0.0/24', arguments='-sV -Pn -sS -n', engine=engine)
+    sc = nm.NmapScanner('127.0.0.1', ports='22', arguments='-sV -Pn -sS -n', engine=engine)
     sc.run()
 
     # If the gateway responds to the scan, it will have an assigned port script
-    for i in sc.scanned_hosts():
-        for proto in sc.scanned_hosts.all_protocols(i):
-            for port in sc.scanned_ports(i, proto):
-                service_instance = sc.service(i, proto, port)
-                if service_instance is not None:
-                    print(service_instance['custom_ssh_enum'])
-                    # Prints 'My SSH enum with the wordlist: /path/to/wordlist'
+    print(sc.port_script('127.0.0.1', 'tcp', 22, 'custom_ssh_enum'))

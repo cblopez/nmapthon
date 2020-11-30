@@ -5,10 +5,10 @@ Host scripts are functions that are execute once per host, if they respond to th
 
 To register a host script, decorate the functions with ``@<engine_instance>.host_script('name')``. The function is defined as follows:
 
-``host_script(name:str, target='*', args=None)``:
+``host_script(name:str, targets='*', args=None)``:
 
 - ``name``: Name that will be used on the ``NmapScanner`` instance to reference the script output.
-- ``target``: Specify the targets that will be affected by the function. ``'*'`` means all of them. It accepts a single target in ``str`` format or a list of them in a ``list`` or ``tuple``.
+- ``targets``: Specify the targets that will be affected by the function. ``'*'`` means all of them. Targets can be specified as an ``str`` or a ``list`` type, the same way as targets are specified during the ``NmapScanner`` :doc:`instantiation`.
 - ``args``: If the function has arguments, pass them as a ``tuple`` or ``list`` of arguments.
 
 The information gathered from each of the registered host function is stored as a normal host script inside the ``NmapScanner`` instance. To access them, use the ``host_scripts(host:str)`` function.
@@ -51,10 +51,8 @@ Example 2
     def func_with_params(my_arg):
         return 'Testing {}!'.format(my_arg)
 
-    sc = NmapScanner('127.0.0.1', engine=engine)
+    sc = nm.NmapScanner('127.0.0.1', engine=engine)
     sc.run()
 
     # Localhost should always respond
-    for _, output in sc.host_scripts('127.0.0.1'):
-        print('{}'.format(output))
-        # Prints 'Testing Nmapthon!'
+    print('{}'.format(sc.host_script('127.0.0.1', 'param_testing')))

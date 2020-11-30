@@ -48,7 +48,7 @@ Simple example
    # This one scans 255 hosts at maximum speed and with script launching, OS detection and Service Detection
    scanner = nm.NmapScanner(['192.168.1.1', '192.168.1.11', '192.168.2.0/24'], arguments='-A -T4')
 
-   # This one scans localhost and another IP range for the first 200 ports and the ones in range 800-1000.
-   scanner = nm.NmapScanner('127.0.0.1, 10.10.0.0/16', ports=['1-200', '800-1000'])
+   # This one scans localhost and another IP range for the first 200 ports and 443.
+   scanner = nm.NmapScanner('127.0.0.1, 10.10.0.0/16', ports=['1-200', 443])
 
 

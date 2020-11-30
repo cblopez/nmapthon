@@ -14,9 +14,9 @@ When retrieving a script output, it needs to be referenced by its name. Nmapthon
 
     - ``port_script(host:str, proto:str, port:(str,int), script_name:str)``: Returns the port script output for a given script name, associated with a protocol and a port. If the target does not have any information about that script, it will raise a ``NmapScannerError``.
 
-    - ``host_scripts(host:str, script_name:str=None)``: Yields a tuple with ``(script_name, script_output)`` for every host script from a particular host. If ``script_name`` is specified, then it will only yield script whose names **contain** that string.
+    - ``host_scripts(host:str, script_name:str=None)``: Yields a tuple with ``(script_name, script_output)`` for every host script from a particular host. If ``script_name`` is specified, then it will only yield scripts whose names **contain** that string.
 
-    - ``port_scripts(host:str, proto:str, port:(str,int), script_name:str=None)``: Yields a tuple with ``(script_name, script_output)`` for every port script from a particular host, port and protocol. If ``script_name`` is specified, then it will only yield script whose names **contain** that string.
+    - ``port_scripts(host:str, proto:str, port:(str,int), script_name:str=None)``: Yields a tuple with ``(script_name, script_output)`` for every port script from a particular host, port and protocol. If ``script_name`` is specified, then it will only yield scripts whose names **contain** that string.
 
 .. note::
 

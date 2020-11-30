@@ -8,7 +8,7 @@ When the engine functions are executed, you may want to access some execution ti
 - ``current_proto``\*: Returns the transport layer protocol being processed when the function is executed.
 - ``current_state``\*: Returns the state of the port being processed when the function is executed.
 
-\* *These properties are only suitable if the function is decorated as a port script.*
+\* *These properties are only suitable if the function is decorated as a ``@port_script``.*
 
 .. important::
 
