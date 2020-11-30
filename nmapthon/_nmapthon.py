@@ -926,7 +926,7 @@ class NmapScanner:
         self._result = nmap_output['scan']
 
     def _has_finished(func):
-        """ Raises NmapScannerError if scanner has not finished or was not performed.
+        """ Raises NmapScanError if scanner has not finished or was not performed.
 
             :raises: NmapScanError
         """
@@ -973,7 +973,7 @@ class NmapScanner:
             :type host: str
             :return: Host's state. None if the host does not exists
             :rtype: str, None
-            :raises: NmapScannerError if host does not exist.
+            :raises: NmapScanError if host does not exist.
         """
         try:
             return self._result[host]['state']
@@ -988,7 +988,7 @@ class NmapScanner:
             :type host: str
             :return: Reason from scan success. None if host does not exists.
             :rtype: str, None
-            :raises: NmapScannerError if host does not exist.
+            :raises: NmapScanError if host does not exist.
         """
         try:
             return self._result[host]['reason']
@@ -1003,7 +1003,7 @@ class NmapScanner:
             :type host: str
             :return: Iterable with all scanned protocol
             :rtype: str
-            :raises: NmapScannerError if host does not exist.
+            :raises: NmapScanError if host does not exist.
         """
         try:
             for proto in self._result[host]['protocols']:
@@ -1021,7 +1021,7 @@ class NmapScanner:
             :type protocol: str
             :return: List of scanned ports from a host and protocol
             :rtype: list
-            :raises: NmapScannerError if host or protocol do not exist.
+            :raises: NmapScanError if host or protocol do not exist.
         """
         try:
             return [int(p) for p in self._result[host]['protocols'][protocol]]
@@ -1038,7 +1038,7 @@ class NmapScanner:
                 :type protocol: str
                 :return: List of non scanned ports from a host and protocol
                 :rtype: list
-                :raises: NmapScannerError if host or protocol do not exist.
+                :raises: NmapScanError if host or protocol do not exist.
         """
         try:
             return [p for p in self._port_list if str(p)

@@ -10,9 +10,9 @@ On the other hand, PyNSE scripts have a mandatory ``name`` parameter.
 
 When retrieving a script output, it needs to be referenced by its name. Nmapthon has several ways of retrieving those scripts:
 
-    - ``host_script(host:str, script_name:str)``: Returns the host script output for a given script name. If the target does not have any information about that script, it will raise a ``NmapScannerError``.
+    - ``host_script(host:str, script_name:str)``: Returns the host script output for a given script name. If the target does not have any information about that script, it will raise a ``NmapScanError``.
 
-    - ``port_script(host:str, proto:str, port:(str,int), script_name:str)``: Returns the port script output for a given script name, associated with a protocol and a port. If the target does not have any information about that script, it will raise a ``NmapScannerError``.
+    - ``port_script(host:str, proto:str, port:(str,int), script_name:str)``: Returns the port script output for a given script name, associated with a protocol and a port. If the target does not have any information about that script, it will raise a ``NmapScanError``.
 
     - ``host_scripts(host:str, script_name:str=None)``: Yields a tuple with ``(script_name, script_output)`` for every host script from a particular host. If ``script_name`` is specified, then it will only yield scripts whose names **contain** that string.
 
@@ -20,7 +20,7 @@ When retrieving a script output, it needs to be referenced by its name. Nmapthon
 
 .. note::
 
-    ``host_script()`` and ``port_script()`` functions must raise a ``NmapScannerError`` to indicate "missing" scripts. The ``None`` return value is not possible,
+    ``host_script()`` and ``port_script()`` functions must raise a ``NmapScanError`` to indicate "missing" scripts. The ``None`` return value is not possible,
     since a PyNSE script may return a None value if the user defines it to do so, and may confuse the real script output with the "missing script" situation.
 
 .. note::
