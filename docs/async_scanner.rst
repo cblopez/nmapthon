@@ -7,9 +7,10 @@ AsyncNmapScanner
 
    running_scan_async
 
-Instantiating ``AsyncNmapScanner`` has the same ``**kwargs`` as the ``NmapScanner`` class (see here), but this one has an optional extra ``kwargs`` parameter:
+Instantiating ``AsyncNmapScanner`` has the same ``**kwargs`` as the ``NmapScanner`` class (:doc:`instantiation`), but this one has an optional extra ``kwargs`` parameter:
 
 - ``mute_errors``: A boolean type parameter, ``False`` by default. If set to ``True``, the scanner won't show fatal errors when executing.
+- ``wrapper``: Wrapper class for executing the background scan. By default, this value is ``multiprocessing.Process`` to avoid GIL problems, but you can specify ``threading.Thread`` if needed.
   
 Example
 +++++++

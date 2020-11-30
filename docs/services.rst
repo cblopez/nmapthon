@@ -32,10 +32,6 @@ Service instances can be used as list objects, which allows scripts management, 
 - ``del service_instance[script_name]``: Delete every script related information for a given script name.
 - ``'my_script' in service_instance``: Check if a given script is inside the instance.
 
-It also have a custom ``__str__`` method:
-
-- ``print(str(service_instance))``: Prints all the service info in a specific way.
-
 Service object example
 ++++++++++++++++++++++
 

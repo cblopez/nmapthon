@@ -10,6 +10,7 @@ NmapScanner
    simple_information
    hosts_ports_info
    services
+   scripts
    os_detection
    host_traceroute
    merge

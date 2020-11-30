@@ -22,6 +22,11 @@ For a given host and protocol, we can also get the scanned and non scanned ports
 - ``non_scanned_ports(host:str, protocol:str``: Return a list of non scanned ports for a given host and protocol.  
 - ``port_state(host:str, protocol:str, port:str,int)``: Return the state and reason ``tuple`` from a port.
 
+.. note::
+
+    If scanning domains, their information would not be under the domain name itself, but under an IP Address, which is the IP address of the host gathered by nmap after resolving the domain.
+
+
 Host information example
 ++++++++++++++++++++++++
 
