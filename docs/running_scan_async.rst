@@ -10,7 +10,7 @@ Running the scan
   
 If ``mute_errors=True`` is used, you can get the Exception raised when muted in case it did not finish successfully:
 
-- ``fatal_error()``: Returns an ``NmapScanError`` with the information from the Exception raised that was muted. If no ``mute_errors=True`` was set, it will return ``None``, but you will have anyways an ``NmapScanError`` raised on your program.
+- ``fatal_errors()``: Returns list of ``NmapScanError`` with the information from the Exceptions raised that was muted. If no ``mute_errors=True`` was set, it will return ``None``, but you will have anyways an ``NmapScanError`` raised on your program.
 
 Example 1
 +++++++++

@@ -8,7 +8,7 @@ To register a port script, decorate the functions with ``@<engine_instance>.port
 ``port_script(name:str, port:(str,int,list), targets='*', proto='*', states=None, args=None)``:
 
 - ``name``: Name that will be used on the ``NmapScanner`` instance to reference the script output.
-- ``port``: Single port or list of ports that, when found with the given states, will make the engine execute the function. They are specified the same way as ports are specified during the ``NmapScanner`` :doc:`instantiation`.
+- ``ports``: Single port or list of ports that, when found with the given states, will make the engine execute the function. They are specified the same way as ports are specified during the ``NmapScanner`` :doc:`instantiation`.
 - ``targets``: Specify the targets that will be affected by the function. ``'*'`` means all of them. Targets can be specified as an ``str`` or a ``list`` type, the same way as targets are specified during the ``NmapScanner`` :doc:`instantiation`.
 - ``proto``: Transport layer protocol from the port. Default is ```*'`` which means anyone, but can also be ``'tcp'`` or ``'udp'``.
 - ``states``: Port states when the function will be triggered. Default is ``None``, which means only ``'open'`` state, but can be a ``list`` containing any of the following values: ``'open'``, ``'filtered'`` and ``'closed'``.

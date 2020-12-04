@@ -1439,10 +1439,10 @@ class NmapScanner:
 
 class AsyncNmapScanner(NmapScanner):
 
-    def __init__(self, **kwargs):
-        NmapScanner.__init__(self, **kwargs)
+    def __init__(self, target, **kwargs):
+        NmapScanner.__init__(self, target, **kwargs)
         self._mute_error = kwargs.get('mute_error', False)
-        self._wrapper = kwargs.get('wrapper', multiprocessing.Process)
+        self._wrapper = kwargs.get('wrapper', threading.Thread)
         self._running = False
         self._had_fatal_errors = False
         self._exception_stack = []
@@ -1498,13 +1498,11 @@ class AsyncNmapScanner(NmapScanner):
         # If there is output
         if len(output):
             try:
-                parsed_nmap_output = _XMLParser(str(output)).parse()
-
+                parsed_nmap_output = _XMLParser(output.decode('utf8')).parse()
             # If parsing error raise NmapScanError with STDERR info.
             except ET.ParseError:
                 if self._mute_error:
-                    self._exception_stack.append(NmapScanError('Could not parse output from nmap. STDERR says:\r\n'
-                                                               + error))
+                    self._exception_stack.append(NmapScanError('Could not parse output from nmap. STDERR says:\n{}'.format(error.decode('utf8'))))
                     self._had_fatal_errors = True
                     self._running = False
                     self._finished = True
@@ -1512,27 +1510,30 @@ class AsyncNmapScanner(NmapScanner):
                 else:
                     self._running = False
                     self._finished = True
-                    raise NmapScanError('Could not parse output from nmap. STDERR says:\r\n' + error)
+                    raise NmapScanError('Could not parse output from nmap. STDERR says:\n{}'.format(error.decode('utf8')))
 
         # If there is no output, raise NmapScanError with STDERR info
         else:
             if self._mute_error:
-                self._exception_stack.append(NmapScanError('Could not parse output from nmap. STDERR says:\r\n'
-                                                           + error))
+                self._exception_stack.append(NmapScanError('Could not parse output from nmap. STDERR says:\n{}'.format(error.decode('utf8'))))
                 self._had_fatal_errors = True
                 self._running = False
                 self._finished = True
             else:
                 self._running = False
                 self._finished = True
-                raise NmapScanError('No output from process was given. STDERR says:\r\n' + error)
+                raise NmapScanError('No output from process was given. STDERR says:\n{}'.format(error.decode('utf8')))
 
         # If any error but method reaches this point, there are tolerant errors.
         if len(error):
             self._tolerant_errors = error
 
         # Assign class attributes from the parsed information.
-        NmapScanner._assign_class_attributes(self, parsed_nmap_output)
+        self._assign_class_attributes(parsed_nmap_output)
+
+        # Execute all the functions that were registered in the engine
+        if self.engine is not None:
+            self._execute_engine_scripts()
 
         # Set finished variable to True
         self._finished = True
