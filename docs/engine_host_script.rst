@@ -29,7 +29,7 @@ Example 1
     def custom_gateway_scan():
         return 'I could return any type of information here'
 
-    sc = NmapScanner('192.168.0.0/24', arguments='-sS -n -T5', engine=engine)
+    sc = nm.NmapScanner('192.168.0.0/24', arguments='-sS -n -T5', engine=engine)
     sc.run()
 
     # If the gateway responds to the scan, it will have an assigned host script
