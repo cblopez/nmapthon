@@ -479,7 +479,6 @@ class Service:
             :raises: AssertionError
         """
         self.__scripts[name] = output
-        assert isinstance(name, str) and isinstance(output, str)
 
     def __delitem__(self, name):
         """ Delete a script from the instance by the name.
