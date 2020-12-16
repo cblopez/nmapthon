@@ -296,7 +296,7 @@ class PyNSEEngine:
         :type port: int, str
         :type state: str
         """
-        print(port)
+        
         for i in self.port_scripts:
             if target in i.targets or i.targets == '*':
                 if (i.proto == '*' or proto == i.proto) and int(port) in i.ports and state in i.states:
