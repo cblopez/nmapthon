@@ -593,6 +593,54 @@ class NmapScanner:
 
         self._finished = False
 
+    @classmethod
+    def from_xml(cls, xml_file):
+        """ Creates an NmapScanner instance from an existing nmap XML file.
+        
+        :param xml_file: XML file to import into the object
+        :type xml_file: str
+        :returns: NmapScanner created from XML content
+        :rtype: NmapScanner
+        """
+
+        # Check if XML
+        if not xml_file.endswith('.xml'):
+            raise NmapScanError('You can only use the from_xml() constructor if you specify an XML file.')
+
+        # Create instance with default None values
+        instance = cls(None)
+        
+        # Import file, if any error raise NmapScanError 
+        content = None
+
+        with open(xml_file) as f:
+            content = f.read()
+        
+        if content is None or content == '':
+            raise NmapScanError('Could not load content from {}'.format(xml_file))
+
+        # Parse content
+        parser = _XMLParser(content)
+        try:
+            parsed_nmap_output = parser.parse()
+        # If parsing error raise NmapScanError with STDERR info.
+        except ET.ParseError as e:
+            raise NmapScanError('Could not parse nmap XML file: {}'.format(e)) from None
+        except AttributeError:
+            raise NmapScanError('Error processing the XML file. Specify a valid Nmap XML output file')
+
+        # Assign class attributes from the parsed information.
+        instance._assign_class_attributes(parsed_nmap_output)
+
+        # Set finished tag
+        instance._finished = True
+
+        # Set targets and ports lists to empty
+        instance._target_list = []
+        instance._port_list = []
+
+        return instance
+
     @property
     def name(self):
         """ Name of the NmapScanner instance
