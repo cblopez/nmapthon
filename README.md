@@ -1,5 +1,5 @@
 # Nmapthon
-A complete, high level Nmap module for Python.  
+An extensible Nmap automation module for Python.  
 &nbsp;
   
 ## Installation  
