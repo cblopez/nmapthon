@@ -1,3 +1,6 @@
+# IMPORTANT
+This library is **no longer supported**! Head into the next version: [Nmapthon2](https://github.com/cblopez/nmapthon2)
+
 # Nmapthon
 An extensible Nmap automation module for Python.  
 &nbsp;
